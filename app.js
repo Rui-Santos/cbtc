@@ -9,6 +9,7 @@ var trades = require('./routes/trades').trades; // a function
 var http = require('http');
 var path = require('path');
 var models = require('./models/models');
+var start_mtgox = require('./models/gox').start_mtgox_stream;
 
 var app = express();
 
@@ -61,14 +62,22 @@ var start_app = function () {
   console.log('schema created');
   var Trade = mongoose.model('Trade', TradeSchema);
 
+
   console.log("past trade creation");
 
   app.get('/', routes.index);
   app.get('/trades', trades(db, Trade));
 
+  var a_trade = new Trade( start_mtgox );
+  console.log(a_trade.modelName);
+
+  console.log('past trade');
+
   http.createServer(app).listen(app.get('port'), function(){
     console.log('Express server listening on port ' + app.get('port'));
   });
+
+
 };
 // all environments
 
