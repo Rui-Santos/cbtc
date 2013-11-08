@@ -15,7 +15,19 @@ var xtend     = require('xtend');
 var inherits  = require('util').inherits;
 var timer = require('timers');
 
-var app = express();
+var app = require('express')()
+  , server = require('http').createServer(app)
+  , io = require('socket.io').listen(server);
+
+server.listen(80);
+
+app.get('/', function (req, res) {
+  res.sendfile(__dirname + '/index.html');
+});
+
+io.sockets.on('connection', function (socket) {
+  socket.emit('trades', { hello: 'world' });
+});
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
@@ -98,6 +110,10 @@ function MtGoxStream(options) {
         // god i hope we dont get errors
       } else {
         console.log("a trade for " + trade_object.amount + " happened at " + trade_object["date"]);
+        io.sockets.on('connection', function (socket) {
+          console.log(trade_object)
+          socket.emit('trades', trade_object);
+        });
         // this is where we could send the trade to jorges front end for the current price
       }
     });
