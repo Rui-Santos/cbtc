@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  h1= Trades
+  u1
+    each trade, i in trades
+      li= "Type: " + trade.type
+      li= "Item: " + trade.item
+      li= "Amount: " + (trade.amount)
+      li= "Price: " + (trade.price)
+      li= "Date: " + trade.date
+      br
