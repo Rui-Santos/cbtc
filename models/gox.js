@@ -65,6 +65,7 @@ function MtGoxStream(options) {
   }
 
   function output(data) {
+
     self.push(data)
     self.push('\n')
   }
@@ -101,8 +102,7 @@ function currencies() {
 var start_mtgox_stream = function () {
   if (!module.parent) {
     var usd = new MtGoxStream({ticker: false, depth: false, trade: true})
-    // usd.pipe(process.stdout)
-    return usd;
+    usd.pipe(process.stdout)
     // var eur = new MtGoxStream({ currency: 'EUR', ticker: false, depth: true })
     // eur.pipe(require('fs').createWriteStream('EUR'))
   }
