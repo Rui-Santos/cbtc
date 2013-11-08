@@ -90,13 +90,7 @@ function MtGoxStream(options) {
 
   function output(data) {
     console.log(JSON.parse(data)["trade"]);
-
     var a_trade = new Trade(JSON.parse(data)["trade"]);
-    console.log("in output");
-    console.log(data);
-    console.log(a_trade);
-    self.push(data);
-    self.push('\n');
   }
 
   function subscribe(channel) {
