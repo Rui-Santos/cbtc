@@ -13,7 +13,8 @@
     "ejs"      : "0.8.4",
     "ws": "git://github.com/ralphtheninja/ws.git",
     "readable-stream": "1.0.2",
-    "xtend": "2.0.3"
+    "xtend": "2.0.3",
+    "mpromise": "0.4.1"
   },
   "repository": {
     "url": "git://github.com/ralphtheninja/goxstream.git"

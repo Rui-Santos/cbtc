@@ -9,10 +9,11 @@ var http = require('http');
 var path = require('path');
 var models = require('./models/models');
 var start_mtgox = require('./models/gox').start_mtgox_stream;
-var Readable  = require('./readable')
-var Websocket = require('ws')
-var xtend     = require('xtend')
-var inherits  = require('util').inherits
+var Readable  = require('./readable');
+var Websocket = require('ws');
+var xtend     = require('xtend');
+var inherits  = require('util').inherits;
+var timer = require('timers');
 
 var app = express();
 
@@ -89,8 +90,17 @@ function MtGoxStream(options) {
   }
 
   function output(data) {
-    console.log(JSON.parse(data)["trade"]);
+    // console.log(JSON.parse(data)["trade"]);
     var a_trade = new Trade(JSON.parse(data)["trade"]);
+    a_trade.date = (a_trade.date * 1000);
+    a_trade.save( function (err, trade_object) {
+      if (err) {
+        // god i hope we dont get errors
+      } else {
+        console.log("a trade for " + trade_object.amount + " happened at " + trade_object["date"]);
+        // this is where we could send the trade to jorges front end for the current price
+      }
+    });
   }
 
   function subscribe(channel) {
@@ -160,8 +170,75 @@ var TradeSchema = mongoose.Schema({
 });
 var Trade = mongoose.model('Trade', TradeSchema);
 
+var MinuteBarSchema = mongoose.Schema({
+  high: Number,
+  low: Number,
+  open: Number,
+  close: Number,
+  date: Date,
+  total_volume: Number
+});
+
+var MinuteBar = mongoose.model('MinuteBar', MinuteBarSchema);
+
+// var calculateNewMinuteBar = function (currentTime, timeBack) {
+//   var tradeArray = [];
+//   var lastMinuteOfTrades = undefined;
+//   Trade.find()
+//         .where('date').gte(currentTime - timeBack)
+//         .sort( { date: 1 })
+//         .exec( function (err, docs) {
+//           if (!err && docs) {
+//             lastMinuteOfTrades = docs;
+//             tradeArray.push(lastMinuteOfTrades);
+//             console.log("trades set in query " + lastMinuteOfTrades);
+
+//             if (lastMinuteOfTrades) {
+//               console.log('in hereee');
+//               var newMinuteBar = new MinuteBar();
+//               newMinuteBar.date = currentTime;
+//               newMinuteBar.open = lastMinuteOfTrades[0].price;
+//               newMinuteBar.close = lastMinuteOfTrades[lastMinuteOfTrades.length - 1 ].price;
+
+//               lastMinuteOfTrades.forEach( function(trade) {
+//                 console.log(trade);
+//                 if (newMinuteBar.high === undefined || trade.price > newMinuteBar.high) {
+//                   newMinuteBar.high = trade.price;
+//                 }
+//                 if (newMinuteBar.low === undefined || trade.price < newMinuteBar.low ) {
+//                   newMinuteBar.low = trade.price;
+//                 }
+//                 newMinuteBar.total_volume += trade.amount;
+//               });
+
+//               newMinuteBar.save( function( err, minbar ) {
+//                 if (err) {
+//                   // shiiiiiit
+//                 } else {
+//                   console.log("minute bar was created at " + minbar.date + "high amount was " + minbar.open);
+//                   // send min bar to jorge nowwww
+//                 }
+//               });
+//             }
+//           }
+//         })
+//   ;
+//   // console.log( "is this an array of trades? " + tradeArray.toString());
+
+
+// };
+
+var runMinuteBarCalc = function () {
+  setInterval(function() {
+    var date = new Date();
+    var time = 10 * 1000;
+    calculateNewMinuteBar(date, time)
+    } , 10 * 1000);
+};
+
 db.once('open', function callback () {
-  console.log('yayyyy');
+  startDate = new Date();
+  console.log(startDate);
   start_app(Trade);
   start_mtgox_stream();
 });
@@ -175,6 +252,7 @@ var start_app = function (Trade) {
     console.log('Express server listening on port ' + app.get('port'));
   });
 
+  runMinuteBarCalc();
 
 };
 // all environments
