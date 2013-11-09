@@ -63,6 +63,25 @@ function createStream(options) {
   return new MtGoxStream(options)
 }
 
+var CreateNewTransaction = function (transaction_data) {
+  var a_transaction = new Transaction();
+    a_transaction.date = JSON.parse(transaction_data)["x"]["time"];
+    a_transaction.value = JSON.parse(transaction_data)["x"]["out"][0]["value"];
+    a_transaction.relayed_by = JSON.parse(transaction_data)["x"]["relayed_by"];
+    a_transaction.save( function (err, transaction_object) {
+      if (err) {
+        console.log("error while saving transaction " + err)
+      } else {
+        console.log("a transaction for " + transaction_object.value + " bitcoins happened at " + transaction_object["date"]);
+        io.sockets.on('connection', function (socket) {
+          console.log(transaction_object);
+          socket.emit('transactions', transaction_object);
+        });
+        // this is where we could send the trade to jorges front end for the current price
+      }
+    });
+};
+
 function blockchain(options) {
 
   var url = 'ws://ws.blockchain.info/inv'
@@ -78,7 +97,8 @@ function blockchain(options) {
   })
 
   function output(data) {
-    console.log(JSON.parse(data))
+    // console.log(JSON.parse(data));
+    CreateNewTransaction(data);
   }
 
   function subscribe(channel) {
