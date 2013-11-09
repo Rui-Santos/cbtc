@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="stylesheets/stx-demo.css" media="screen" />    <!-- Style sheet for stx-demo.js -->
+<script type="text/javascript" src="javascripts/SAMPLEDATA.js"></script>   <!-- Sample data -->
+
+<script type="text/javascript" src="javascripts/stxUtilities.js"></script>
+<script type="text/javascript" src="javascripts/stxMarket.js"></script>
+<script type="text/javascript" src="javascripts/stxStudies.js"></script>
+</head>
+
+<body>
+
+<!-- This is your chart container. Position it anywhere, and in any way that you wish on your webpage
+     the items inside the chart container are widgets that are overlayed on the chart itself such as
+     controls for zooming.
+-->
+  <div id="chartContainer"> 
+    <div id="chartControls">
+      <div id="chartSize"> <span id="zoomOut" class="minus">-</span> <span id="zoomIn" class="plus">-</span> </div>
+      <div id="home" class="home btn" style="display:none"><span>Today</span></div>
+    </div>
+            
+    <div id="iconsTemplate" class="icons" style="display: none;">
+      <div id="iconsTitle">Title</div>
+      <div class="btn icon"><span class="up">&nbsp;</span></div>
+      <div class="btn icon"><span class="focus">&nbsp;</span></div>
+      <div class="btn icon"><span class="down">&nbsp;</span></div>
+      <div class="btn icon"><span class="close">&nbsp;</span></div>
+    </div>
+    
+    <div id="handleTemplate" class="handle" style="display: none;"><span>Drag</span></div>
+    
+    <div id="floatDate" class="hd" style="display: none;"></div>
+    <div id="floatVolume" class="hd" style="display: none;"></div>
+    <div id="floatHR" class="vd" style="display: none;"></div>
+    <div id="currentHR" class="vd" style="display: none;"></div>
+
+    <div id="mSticky">
+    	<span id="mStickyInterior"></span>
+    	<span id="overlayTrashCan" class="btn icon" style="display:none">
+    		<span class="close">&nbsp;</span>
+    	</span>
+    </div>
+    
+    <span id="annotationSave" class="btn">save</span> <span id="annotationCancel" style="margin-left:10px;" class="btn">cancel</span>
+    <div id="crossY" class="stx_crosshair" style="display: none;"></div>
+    <div id="crossX" class="stx_crosshair" style="display: none;"></div>
+  </div>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
+<script type="text/javascript" src="javascripts/stxChart.js"></script> 
+<script type="text/javascript" charset="ISO-8859-1" src="javascripts/stxModulus.js"></script>
+<script type="text/javascript" charset="ISO-8859-1" src="javascripts/stxKernelOs.js"></script>
+
+<script>
+
+var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
+stxx.manageTouchAndMouse=true;
+
+function convertArrayToJson(quotes){
+	var jsObj=[];
+	for(var i=0;i<quotes.length;i++){
+		jsObj[i]={};
+		jsObj[i].Date=quotes[i][0];
+		jsObj[i].Open=quotes[i][1];
+		jsObj[i].High=quotes[i][2];
+		jsObj[i].Low=quotes[i][3];
+		jsObj[i].Close=quotes[i][4];
+		jsObj[i].Volume=quotes[i][5];
+		jsObj[i].Adj_Close=quotes[i][6];
+	}
+	return jsObj;
+}
+
+function displayChart(){
+	stxx.chart.symbol="SPY"; 							// Set the internal symbol so that the display on the chart is correct
+	stxx.setMasterData(convertArrayToJson(sampleData)); // Initialize the data
+	stxx.setPeriodicityV2(1,5);
+	stxx.createDataSet(); 								// This step runs the calculations for any selected studies.
+	stxx.initializeChart($$("chartContainer")); 		// This initializes the chart to the container. Any existing canvases are removed.
+	stxx.draw(); 										// Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
+}
+
+var streamingData=[
+{Date:null,Open:155.43,High:155.44,Low:155.39,Close:155.4,Volume:466380},
+{Date:null,Open:155.41,High:155.48,Low:155.4,Close:155.46,Volume:466480},
+{Date:null,Open:155.45,High:155.55,Low:155.43,Close:155.5,Volume:466580},
+{Date:null,Open:155.49,High:155.51,Low:155.41,Close:155.41,Volume:466680},
+{Date:null,Open:155.41,High:155.49,Low:155.38,Close:155.47,Volume:466780},
+{Date:null,Open:155.47,High:155.5,Low:155.44,Close:155.45,Volume:466880},
+{Date:null,Open:155.45,High:155.47,Low:155.43,Close:155.46,Volume:500},
+{Date:null,Open:155.47,High:155.5,Low:155.44,Close:155.48,Volume:1000},
+{Date:null,Open:155.49,High:155.49,Low:155.46,Close:155.47,Volume:30000},
+{Date:null,Open:155.47,High:155.53,Low:155.46,Close:155.51,Volume:100000},
+{Date:null,Open:155.51,High:155.52,Low:155.45,Close:155.47,Volume:3000},
+{Date:null,Open:155.46,High:155.47,Low:155.37,Close:155.41,Volume:50000},
+{Date:null,Open:155.41,High:155.42,Low:155.38,Close:155.41,Volume:100000},
+{Date:null,Open:155.41,High:155.46,Low:155.4,Close:155.45,Volume:400000},
+{Date:null,Open:155.32,High:155.48,Low:155.3,Close:155.41,Volume:500000}
+];
+var streamCounter=0;
+var startTick=strToDateTime("2013-03-20 13:40");
+var currentTick=startTick;
+var streamStartTime=new Date().getTime();
+function streamSimulation(){
+	// Grab the next tick in the series
+	var newTick=clone(streamingData[streamCounter++]);
+	if(streamCounter==streamingData.length) streamCounter=0;
+	
+	// Compute the beginning time of the next bar
+	var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx);
+	
+	// Determine whether to increment the bar time or not
+	var now=new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
+	if(now.getTime()>=nextTickTime.getTime()){
+		newTick.Date=yyyymmddhhmm(nextTickTime);
+		currentTick=nextTickTime;
+	}else{
+		newTick.Date=yyyymmddhhmm(currentTick);
+	}
+	// Inject the bar
+	stxx.appendMasterData([newTick]);
+	
+	// Queue the next event
+	setTimeout(streamSimulation,250);
+}
+
+$(document).ready(function() {
+	displayChart();
+	streamSimulation();
+});
+
+</script>
+</body>
+</html>
