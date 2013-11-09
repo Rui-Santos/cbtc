@@ -1,25 +1,26 @@
 <!doctype html>
 <html>
   <head>
+    <script src="http://localhost:8080/socket.io/socket.io.js"></script>
   </head>
   <body>
 
-
-    <script src="http://localhost:3000/javascripts/socket.js"></script>
-
-
-
     <script>
-      var server = io.connect('http://localhost:3000/test');
+      var socket = io.connect('http://localhost:8080');
 
       var $allTrades = $allTrades || [];
 
+
       var insertMessage = function(data) {
-        console.log("trade being shifted " + $allTrades.shift());
+        $allTrades.shift();
+        console.log("trade being shifted " + $allTrades);
+        console.log(data);
         $allTrades.push(data);
       };
 
-
+    socket.on('trades', function (data) {
+      insertMessage(data);
+    });
     </script>
 
   </body>

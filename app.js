@@ -17,12 +17,13 @@ var timer = require('timers');
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/bitcoin');
 var db = mongoose.connection;
+// var socket = require('socket.io-client')('http://localhost');
 
 var app = express()
   , server = http.createServer(app)
   , io = require('socket.io').listen(server);
 
-server.listen(80);
+server.listen(8080);
 
 // app.get('/', function (req, res) {
 //   res.sendfile(__dirname + '/index.html');
@@ -32,7 +33,7 @@ server.listen(80);
 //   socket.emit('trades', { hello: 'world' });
 // });
 
-app.set('port', process.env.PORT || 3000);
+// app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.use(express.favicon());
@@ -316,17 +317,30 @@ db.once('open', function callback () {
   blockchain();
 });
 
+// MinuteBar.find().sort({date: -1}).limit(1);
+
 var start_app = function (Trade) {
 
   app.get('/', routes.index);
   app.get('/trades', trades(db, Trade));
+  // app.get('/last', routes.last(MinuteBar.find().sort({date: -1}).limit(1)));
   app.get('/test', function (req, res) {
     res.sendfile(__dirname + '/views/test.html');
   });
 
-  http.createServer(app).listen(app.get('port'), function(){
-    console.log('Express server listening on port ' + app.get('port'));
+  app.get('/last', function(req, res) {
+    var lastTrade = MinuteBar.find().sort( {date: -1} ).limit(1);
+    res.json(lastTrade);
   });
+
+
+
+
+
+
+  // http.createServer(app).listen(app.get('port'), function(){
+  //   console.log('Express server listening on port ' + app.get('port'));
+  // });
 
   runMinuteBarCalc();
 
