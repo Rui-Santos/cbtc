@@ -181,52 +181,58 @@ var MinuteBarSchema = mongoose.Schema({
 
 var MinuteBar = mongoose.model('MinuteBar', MinuteBarSchema);
 
-// var calculateNewMinuteBar = function (currentTime, timeBack) {
-//   var tradeArray = [];
-//   var lastMinuteOfTrades = undefined;
-//   Trade.find()
-//         .where('date').gte(currentTime - timeBack)
-//         .sort( { date: 1 })
-//         .exec( function (err, docs) {
-//           if (!err && docs) {
-//             lastMinuteOfTrades = docs;
-//             tradeArray.push(lastMinuteOfTrades);
-//             console.log("trades set in query " + lastMinuteOfTrades);
+var calculateNewMinuteBar = function (currentTime, timeBack) {
+  var tradeArray = [];
+  var lastMinuteOfTrades = undefined;
+  Trade.find()
+        .where('date').gte(currentTime - timeBack)
+        .sort( { date: 1 })
+        .exec( function (err, docs) {
+          if (!err && docs) {
+            lastMinuteOfTrades = docs;
+            tradeArray.push(lastMinuteOfTrades);
+            // console.log("trades set in query " + lastMinuteOfTrades);
 
-//             if (lastMinuteOfTrades) {
-//               console.log('in hereee');
-//               var newMinuteBar = new MinuteBar();
-//               newMinuteBar.date = currentTime;
-//               newMinuteBar.open = lastMinuteOfTrades[0].price;
-//               newMinuteBar.close = lastMinuteOfTrades[lastMinuteOfTrades.length - 1 ].price;
+            if (lastMinuteOfTrades.length > 0) {
+              var count = 0;
+              var newMinuteBar = new MinuteBar();
+              newMinuteBar.date = currentTime;
+              newMinuteBar.open = lastMinuteOfTrades[0].price;
+              newMinuteBar.close = lastMinuteOfTrades[lastMinuteOfTrades.length - 1 ].price;
 
-//               lastMinuteOfTrades.forEach( function(trade) {
-//                 console.log(trade);
-//                 if (newMinuteBar.high === undefined || trade.price > newMinuteBar.high) {
-//                   newMinuteBar.high = trade.price;
-//                 }
-//                 if (newMinuteBar.low === undefined || trade.price < newMinuteBar.low ) {
-//                   newMinuteBar.low = trade.price;
-//                 }
-//                 newMinuteBar.total_volume += trade.amount;
-//               });
+              lastMinuteOfTrades.forEach( function(trade) {
 
-//               newMinuteBar.save( function( err, minbar ) {
-//                 if (err) {
-//                   // shiiiiiit
-//                 } else {
-//                   console.log("minute bar was created at " + minbar.date + "high amount was " + minbar.open);
-//                   // send min bar to jorge nowwww
-//                 }
-//               });
-//             }
-//           }
-//         })
-//   ;
-//   // console.log( "is this an array of trades? " + tradeArray.toString());
+                newMinuteBar.total_volume = 0;
+                // console.log("this is a trade " + trade);
+                if (newMinuteBar.high === undefined || trade.price > newMinuteBar.high) {
+                  newMinuteBar.high = trade.price;
+                }
+                if (newMinuteBar.low === undefined || trade.price < newMinuteBar.low ) {
+                  newMinuteBar.low = trade.price;
+                }
+                newMinuteBar.total_volume += trade.amount;
+                count ++;
+              });
+              // console.log(newMinuteBar + " this is th abarrrrrrrrr")
+              newMinuteBar.save( function( err, minbar ) {
+                if (err) {
+                  // console.log("error in save" + minbar);
+                  console.log(err + " this is the error");
+                } else {
+                  console.log("minute bar was created at " + minbar.date + "high amount was " + minbar.high);
+                  console.log("minute bar was created at " + minbar.date + "low amount was " + minbar.low);
+                  console.log(count + " trades happened in the last minute!!!");
+                  // send min bar to jorge nowwww
+                }
+              });
+            }
+          }
+        })
+  ;
+  console.log( "is this an array of trades? " + tradeArray.toString());
 
 
-// };
+};
 
 var runMinuteBarCalc = function () {
   setInterval(function() {
@@ -256,4 +262,6 @@ var start_app = function (Trade) {
 
 };
 // all environments
+
+
 
