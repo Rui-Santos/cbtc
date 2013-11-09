@@ -11,16 +11,22 @@
       var $allTrades = $allTrades || [];
 
 
-      var insertMessage = function(data) {
+      var insertMessage = function(trade_object) {
         $allTrades.shift();
-        console.log("trade being shifted " + $allTrades);
-        console.log(data);
-        $allTrades.push(data);
+        console.log("this is itttt");
+
+        // console.log(data);
+        $allTrades.push(trade_object);
+        console.log($allTrades);
       };
 
-    socket.on('trades', function (data) {
-      insertMessage(data);
-    });
+      socket.on('trades', function (trade_object) {
+        insertMessage(trade_object);
+      });
+    </script>
+
+    <script id="entry-template" type="text/x-handlebars-template">
+      template content
     </script>
 
   </body>

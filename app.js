@@ -67,7 +67,7 @@ function createStream(options) {
 var CreateNewTransaction = function (transaction_data) {
   var a_transaction = new Transaction();
     a_transaction.date = JSON.parse(transaction_data)["x"]["time"];
-    a_transaction.value = JSON.parse(transaction_data)["x"]["out"][0]["value"];
+    a_transaction.value = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000;
     a_transaction.relayed_by = JSON.parse(transaction_data)["x"]["relayed_by"];
     a_transaction.save( function (err, transaction_object) {
       if (err) {
@@ -75,7 +75,7 @@ var CreateNewTransaction = function (transaction_data) {
       } else {
         console.log("a transaction for " + transaction_object.value + " bitcoins happened at " + transaction_object["date"]);
         io.sockets.on('connection', function (socket) {
-          console.log(transaction_object);
+          console.log("transaction emitted " + transaction_object.value);
           socket.emit('transactions', transaction_object);
         });
         // this is where we could send the trade to jorges front end for the current price
@@ -155,7 +155,7 @@ function MtGoxStream(options) {
     } catch (err) {
       console.log('invalid json data', data)
     }
-    return false
+    return false;
   }
 
   function output(data) {
@@ -165,10 +165,11 @@ function MtGoxStream(options) {
     a_trade.save( function (err, trade_object) {
       if (err) {
         // god i hope we dont get errors
+        console.log("error logging trade data " + err);
       } else {
         console.log("a trade for " + trade_object.amount + " happened at " + trade_object["date"]);
         io.sockets.on('connection', function (socket) {
-          console.log(trade_object);
+          console.log("emitted trade at" + trade_object.date);
           socket.emit('trades', trade_object);
         });
         // this is where we could send the trade to jorges front end for the current price
