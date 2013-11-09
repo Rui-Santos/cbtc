@@ -74,7 +74,7 @@ function blockchain(options) {
     output(data)
   })
 
-  function outgitput(data) {
+  function output(data) {
     console.log(JSON.parse(data))
   }
 
