@@ -21,9 +21,9 @@ var app = require('express')()
 
 server.listen(80);
 
-app.get('/', function (req, res) {
-  res.sendfile(__dirname + '/index.html');
-});
+// app.get('/', function (req, res) {
+//   res.sendfile(__dirname + '/index.jade');
+// });
 
 io.sockets.on('connection', function (socket) {
   socket.emit('trades', { hello: 'world' });
