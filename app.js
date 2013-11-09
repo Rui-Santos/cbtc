@@ -216,7 +216,7 @@ var MinuteBarSchema = mongoose.Schema({
   open: Number,
   close: Number,
   date: Date,
-  total_volume: Number
+  volume: Number
 });
 
 var MinuteBar = mongoose.model('MinuteBar', MinuteBarSchema);
@@ -242,7 +242,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
 
               lastMinuteOfTrades.forEach( function(trade) {
 
-                newMinuteBar.total_volume = 0;
+                newMinuteBar.volume = 0;
                 // console.log("this is a trade " + trade);
                 if (newMinuteBar.high === undefined || trade.price > newMinuteBar.high) {
                   newMinuteBar.high = trade.price;
@@ -250,7 +250,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
                 if (newMinuteBar.low === undefined || trade.price < newMinuteBar.low ) {
                   newMinuteBar.low = trade.price;
                 }
-                newMinuteBar.total_volume += trade.amount;
+                newMinuteBar.volume += trade.amount;
                 count ++;
               });
               // console.log(newMinuteBar + " this is th abarrrrrrrrr")
@@ -260,7 +260,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
                   console.log(err + " this is the error");
                 } else {
                   console.log("minute bar was created at " + minbar.date + "high amount was " + minbar.high);
-                  console.log("minute bar was created at " + minbar.date + "low amount was " + minbar.low);
+                  // console.log("minute bar was created at " + minbar.date + "low amount was " + minbar.low);
                   console.log(count + " trades happened in the last minute!!!");
                   // send min bar to jorge nowwww
                 }
