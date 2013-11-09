@@ -14,6 +14,9 @@ var Websocket = require('ws');
 var xtend     = require('xtend');
 var inherits  = require('util').inherits;
 var timer = require('timers');
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/bitcoin');
+var db = mongoose.connection;
 
 var app = express()
   , server = http.createServer(app)
@@ -74,7 +77,7 @@ function blockchain(options) {
     output(data)
   })
 
-  function outgitput(data) {
+  function output(data) {
     console.log(JSON.parse(data))
   }
 
@@ -82,7 +85,15 @@ function blockchain(options) {
     console.log('subscribing to channel:', channel)
     ws.send(JSON.stringify({ op: 'unconfirmed_sub' }))
   }
-}
+};
+
+var TransactionSchema = mongoose.Schema({
+  relayed_by: String,
+  value: Number,
+  date: Date
+});
+
+var Transaction = mongoose.model('Transaction', TransactionSchema);
 
 function MtGoxStream(options) {
   options = xtend(defaultOptions, options)
@@ -187,9 +198,7 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/bitcoin');
-var db = mongoose.connection;
+
 db.on('error', console.error.bind(console, 'connection error:'));
 
 var TradeSchema = mongoose.Schema({
