@@ -60,6 +60,30 @@ function createStream(options) {
   return new MtGoxStream(options)
 }
 
+function blockchain(options) {
+
+  var url = 'ws://ws.blockchain.info/inv'
+  ws = new Websocket(url)
+
+  ws.on('open', function() {
+    console.log('connected to:', url)
+    subscribe('blockchain')
+   })
+
+  ws.on('message', function(data) {
+    output(data)
+  })
+
+  function outgitput(data) {
+    console.log(JSON.parse(data))
+  }
+
+  function subscribe(channel) {
+    console.log('subscribing to channel:', channel)
+    ws.send(JSON.stringify({ op: 'unconfirmed_sub' }))
+  }
+}
+
 function MtGoxStream(options) {
   options = xtend(defaultOptions, options)
 
@@ -260,6 +284,7 @@ db.once('open', function callback () {
   console.log(startDate);
   start_app(Trade);
   start_mtgox_stream();
+  blockchain();
 });
 
 var start_app = function (Trade) {
