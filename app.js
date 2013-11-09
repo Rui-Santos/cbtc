@@ -237,9 +237,9 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
 var runMinuteBarCalc = function () {
   setInterval(function() {
     var date = new Date();
-    var time = 10 * 1000;
+    var time = 60 * 1000;
     calculateNewMinuteBar(date, time)
-    } , 10 * 1000);
+    } , 60 * 1000);
 };
 
 db.once('open', function callback () {
