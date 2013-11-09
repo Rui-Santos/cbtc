@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+  </head>
+  <body>
+
+
+    <script src="http://localhost:3000/javascripts/socket.js"></script>
+
+
+
+    <script>
+      var server = io.connect('http://localhost:3000/test');
+
+      var $allTrades = $allTrades || [];
+
+      var insertMessage = function(data) {
+        console.log("trade being shifted " + $allTrades.shift());
+        $allTrades.push(data);
+      };
+
+
+    </script>
+
+  </body>
+</html>
+

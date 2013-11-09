@@ -1,9 +1,9 @@
-
 /**
  * Module dependencies.
  */
 var express = require('express');
 var routes = require('./routes');
+var test = require('./routes/test').test;
 var trades = require('./routes/trades').trades; // a function
 var http = require('http');
 var path = require('path');
@@ -15,8 +15,8 @@ var xtend     = require('xtend');
 var inherits  = require('util').inherits;
 var timer = require('timers');
 
-var app = require('express')()
-  , server = require('http').createServer(app)
+var app = express()
+  , server = http.createServer(app)
   , io = require('socket.io').listen(server);
 
 server.listen(80);
@@ -25,9 +25,9 @@ server.listen(80);
 //   res.sendfile(__dirname + '/index.html');
 // });
 
-io.sockets.on('connection', function (socket) {
-  socket.emit('trades', { hello: 'world' });
-});
+// io.sockets.on('connection', function (socket) {
+//   socket.emit('trades', { hello: 'world' });
+// });
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
@@ -41,6 +41,7 @@ app.use(express.cookieParser('your secret here'));
 app.use(express.session());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 module.exports = {
     createStream: createStream
@@ -111,7 +112,7 @@ function MtGoxStream(options) {
       } else {
         console.log("a trade for " + trade_object.amount + " happened at " + trade_object["date"]);
         io.sockets.on('connection', function (socket) {
-          console.log(trade_object)
+          console.log(trade_object);
           socket.emit('trades', trade_object);
         });
         // this is where we could send the trade to jorges front end for the current price
@@ -157,9 +158,6 @@ var start_mtgox_stream = function () {
   }
 };
 
-
-
-
 // development only
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
@@ -184,6 +182,7 @@ var TradeSchema = mongoose.Schema({
     price_int: String,
     item: String
 });
+
 var Trade = mongoose.model('Trade', TradeSchema);
 
 var MinuteBarSchema = mongoose.Schema({
@@ -245,9 +244,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
           }
         })
   ;
-  console.log( "is this an array of trades? " + tradeArray.toString());
-
-
+  // console.log( "is this an array of trades? " + tradeArray.toString());
 };
 
 var runMinuteBarCalc = function () {
@@ -269,6 +266,9 @@ var start_app = function (Trade) {
 
   app.get('/', routes.index);
   app.get('/trades', trades(db, Trade));
+  app.get('/test', function (req, res) {
+    res.sendfile(__dirname + '/views/test.html');
+  });
 
   http.createServer(app).listen(app.get('port'), function(){
     console.log('Express server listening on port ' + app.get('port'));
@@ -278,6 +278,3 @@ var start_app = function (Trade) {
 
 };
 // all environments
-
-
-
