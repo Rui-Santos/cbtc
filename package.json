@@ -15,7 +15,9 @@
     "ws": "git://github.com/ralphtheninja/ws.git",
     "readable-stream": "1.0.2",
     "xtend": "2.0.3",
-    "mpromise": "0.4.1"
+    "mpromise": "0.4.1",
+    "handlebars": "1.1.2",
+    "socket.io-client": "latest"
   },
   "repository": {
     "url": "git://github.com/ralphtheninja/goxstream.git"

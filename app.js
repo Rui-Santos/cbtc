@@ -1,9 +1,9 @@
-
 /**
  * Module dependencies.
  */
 var express = require('express');
 var routes = require('./routes');
+var test = require('./routes/test').test;
 var trades = require('./routes/trades').trades; // a function
 var http = require('http');
 var path = require('path');
@@ -14,22 +14,26 @@ var Websocket = require('ws');
 var xtend     = require('xtend');
 var inherits  = require('util').inherits;
 var timer = require('timers');
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/bitcoin');
+var db = mongoose.connection;
+// var socket = require('socket.io-client')('http://localhost');
 
-var app = require('express')()
-  , server = require('http').createServer(app)
+var app = express()
+  , server = http.createServer(app)
   , io = require('socket.io').listen(server);
 
-server.listen(80);
+server.listen(8080);
 
 // app.get('/', function (req, res) {
 //   res.sendfile(__dirname + '/index.jade');
 // });
 
-io.sockets.on('connection', function (socket) {
-  socket.emit('trades', { hello: 'world' });
-});
+// io.sockets.on('connection', function (socket) {
+//   socket.emit('trades', { hello: 'world' });
+// });
 
-app.set('port', process.env.PORT || 3000);
+// app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.use(express.favicon());
@@ -41,6 +45,7 @@ app.use(express.cookieParser('your secret here'));
 app.use(express.session());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 module.exports = {
     createStream: createStream
@@ -58,6 +63,58 @@ var defaultOptions = {
 function createStream(options) {
   return new MtGoxStream(options)
 }
+
+var CreateNewTransaction = function (transaction_data) {
+  var a_transaction = new Transaction();
+    a_transaction.date = JSON.parse(transaction_data)["x"]["time"];
+    a_transaction.value = JSON.parse(transaction_data)["x"]["out"][0]["value"];
+    a_transaction.relayed_by = JSON.parse(transaction_data)["x"]["relayed_by"];
+    a_transaction.save( function (err, transaction_object) {
+      if (err) {
+        console.log("error while saving transaction " + err)
+      } else {
+        console.log("a transaction for " + transaction_object.value + " bitcoins happened at " + transaction_object["date"]);
+        io.sockets.on('connection', function (socket) {
+          console.log(transaction_object);
+          socket.emit('transactions', transaction_object);
+        });
+        // this is where we could send the trade to jorges front end for the current price
+      }
+    });
+};
+
+function blockchain(options) {
+
+  var url = 'ws://ws.blockchain.info/inv'
+  ws = new Websocket(url)
+
+  ws.on('open', function() {
+    console.log('connected to:', url)
+    subscribe('blockchain')
+   })
+
+  ws.on('message', function(data) {
+    output(data)
+  })
+
+  function output(data) {
+    // console.log(JSON.parse(data));
+    CreateNewTransaction(data);
+  }
+
+  function subscribe(channel) {
+    console.log('subscribing to channel:', channel)
+    ws.send(JSON.stringify({ op: 'unconfirmed_sub' }))
+  }
+};
+
+var TransactionSchema = mongoose.Schema({
+  relayed_by: String,
+  value: Number,
+  date: Date
+});
+
+var Transaction = mongoose.model('Transaction', TransactionSchema);
 
 function MtGoxStream(options) {
   options = xtend(defaultOptions, options)
@@ -111,7 +168,7 @@ function MtGoxStream(options) {
       } else {
         console.log("a trade for " + trade_object.amount + " happened at " + trade_object["date"]);
         io.sockets.on('connection', function (socket) {
-          console.log(trade_object)
+          console.log(trade_object);
           socket.emit('trades', trade_object);
         });
         // this is where we could send the trade to jorges front end for the current price
@@ -157,17 +214,12 @@ var start_mtgox_stream = function () {
   }
 };
 
-
-
-
 // development only
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/bitcoin');
-var db = mongoose.connection;
+
 db.on('error', console.error.bind(console, 'connection error:'));
 
 var TradeSchema = mongoose.Schema({
@@ -184,6 +236,7 @@ var TradeSchema = mongoose.Schema({
     price_int: String,
     item: String
 });
+
 var Trade = mongoose.model('Trade', TradeSchema);
 
 var MinuteBarSchema = mongoose.Schema({
@@ -192,7 +245,7 @@ var MinuteBarSchema = mongoose.Schema({
   open: Number,
   close: Number,
   date: Date,
-  total_volume: Number
+  volume: Number
 });
 
 var MinuteBar = mongoose.model('MinuteBar', MinuteBarSchema);
@@ -218,7 +271,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
 
               lastMinuteOfTrades.forEach( function(trade) {
 
-                newMinuteBar.total_volume = 0;
+                newMinuteBar.volume = 0;
                 // console.log("this is a trade " + trade);
                 if (newMinuteBar.high === undefined || trade.price > newMinuteBar.high) {
                   newMinuteBar.high = trade.price;
@@ -226,7 +279,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
                 if (newMinuteBar.low === undefined || trade.price < newMinuteBar.low ) {
                   newMinuteBar.low = trade.price;
                 }
-                newMinuteBar.total_volume += trade.amount;
+                newMinuteBar.volume += trade.amount;
                 count ++;
               });
               // console.log(newMinuteBar + " this is th abarrrrrrrrr")
@@ -236,7 +289,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
                   console.log(err + " this is the error");
                 } else {
                   console.log("minute bar was created at " + minbar.date + "high amount was " + minbar.high);
-                  console.log("minute bar was created at " + minbar.date + "low amount was " + minbar.low);
+                  // console.log("minute bar was created at " + minbar.date + "low amount was " + minbar.low);
                   console.log(count + " trades happened in the last minute!!!");
                   // send min bar to jorge nowwww
                 }
@@ -245,9 +298,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
           }
         })
   ;
-  console.log( "is this an array of trades? " + tradeArray.toString());
-
-
+  // console.log( "is this an array of trades? " + tradeArray.toString());
 };
 
 var runMinuteBarCalc = function () {
@@ -263,21 +314,35 @@ db.once('open', function callback () {
   console.log(startDate);
   start_app(Trade);
   start_mtgox_stream();
+  blockchain();
 });
+
+// MinuteBar.find().sort({date: -1}).limit(1);
 
 var start_app = function (Trade) {
 
   app.get('/', routes.index);
   app.get('/trades', trades(db, Trade));
-
-  http.createServer(app).listen(app.get('port'), function(){
-    console.log('Express server listening on port ' + app.get('port'));
+  // app.get('/last', routes.last(MinuteBar.find().sort({date: -1}).limit(1)));
+  app.get('/test', function (req, res) {
+    res.sendfile(__dirname + '/views/test.html');
   });
+
+  app.get('/last', function(req, res) {
+    var lastTrade = MinuteBar.find().sort( {date: -1} ).limit(1);
+    res.json(lastTrade);
+  });
+
+
+
+
+
+
+  // http.createServer(app).listen(app.get('port'), function(){
+  //   console.log('Express server listening on port ' + app.get('port'));
+  // });
 
   runMinuteBarCalc();
 
 };
 // all environments
-
-
-
