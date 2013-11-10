@@ -64,11 +64,12 @@ function createStream(options) {
   return new MtGoxStream(options)
 }
 
-var CreateNewTransaction = function (transaction_data) {
+var CreateNewTransaction = function (transaction_data, geo_cord_array) {
   var a_transaction = new Transaction();
     a_transaction.date = JSON.parse(transaction_data)["x"]["time"];
     a_transaction.value = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000;
-    a_transaction.relayed_by = JSON.parse(transaction_data)["x"]["relayed_by"];
+    a_transaction.geo_location = geo_cord_array;
+    console.log
     a_transaction.save( function (err, transaction_object) {
       if (err) {
         console.log("error while saving transaction " + err)
@@ -99,7 +100,16 @@ function blockchain(options) {
 
   function output(data) {
     // console.log(JSON.parse(data));
-    CreateNewTransaction(data);
+    var geoip = require('geoip-lite');
+
+    var ip_ping = eval("("+data+")").x.relayed_by;
+    console.log(ip_ping);
+    var geo = geoip.lookup(ip_ping);
+    if(geo != null && geo["ll"]){
+      geo = geoip.lookup(ip_ping);
+      console.log(geo["ll"]);
+      CreateNewTransaction(data,geo["ll"]);
+    }
   }
 
   function subscribe(channel) {
@@ -109,7 +119,7 @@ function blockchain(options) {
 };
 
 var TransactionSchema = mongoose.Schema({
-  relayed_by: String,
+  geo_location: Array,
   value: Number,
   date: Date
 });
