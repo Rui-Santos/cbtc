@@ -26,7 +26,7 @@ var app = express()
 server.listen(8080);
 
 // app.get('/', function (req, res) {
-//   res.sendfile(__dirname + '/index.html');
+//   res.sendfile(__dirname + '/index.jade');
 // });
 
 // io.sockets.on('connection', function (socket) {
