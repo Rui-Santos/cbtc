@@ -69,25 +69,25 @@
 
 <script>
 
-        $(document).ready(function() {
-        	debugger;
-	        var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
-	        stxx.manageTouchAndMouse=true;
+  $(document).ready(function() {
+  	debugger;
+    var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
+    stxx.manageTouchAndMouse=true;
 
-	        function convertArrayToJson(quotes){
-	            var jsObj=[];
-	            for(var i=0;i<quotes.length;i++){
-	                    jsObj[i]={};
-	                    jsObj[i].Date=quotes[i][0];
-	                    jsObj[i].Open=quotes[i][1];
-	                    jsObj[i].High=quotes[i][2];
-	                    jsObj[i].Low=quotes[i][3];
-	                    jsObj[i].Close=quotes[i][4];
-	                    jsObj[i].Volume=quotes[i][5];
-	                    jsObj[i].Adj_Close=quotes[i][6];
-	            }
-	            return jsObj;
-        	}
+    function convertArrayToJson(quotes){
+        var jsObj=[];
+        for(var i=0;i<quotes.length;i++){
+                jsObj[i]={};
+                jsObj[i].Date=quotes[i][0];
+                jsObj[i].Open=quotes[i][1];
+                jsObj[i].High=quotes[i][2];
+                jsObj[i].Low=quotes[i][3];
+                jsObj[i].Close=quotes[i][4];
+                jsObj[i].Volume=quotes[i][5];
+                jsObj[i].Adj_Close=quotes[i][6];
+        }
+        return jsObj;
+  	}
 
 	        // Display the chart
 
@@ -97,19 +97,19 @@
 
         // This is where the sample chart is grabbing the data
 
-	        function displayChart(){
-	                stxx.chart.symbol="SPY";
-	                debugger;
-	                // Set the internal symbol so that the display on the chart is correct
-	                for(var i = 1; i < trade_data.emitted.complete[0].length;i ++) {
-	                	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
-	                }
-	                stxx.setMasterData(trade_data.emitted.complete[0]); // Initialize the data
-	                stxx.setPeriodicityV2(1,5);
-	                stxx.createDataSet();                                                                 // This step runs the calculations for any selected studies.
-	                stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
-	                stxx.draw();                                                                                 // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
-	        }
+    function displayChart(){
+            stxx.chart.symbol="SPY";
+            debugger;
+            // Set the internal symbol so that the display on the chart is correct
+            for(var i = 1; i < trade_data.emitted.complete[0].length;i ++) {
+            	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
+            }
+            stxx.setMasterData(trade_data.emitted.complete[0]); // Initialize the data
+            stxx.setPeriodicityV2(1,5);
+            stxx.createDataSet();                                                                 // This step runs the calculations for any selected studies.
+            stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
+            stxx.draw();                                                                                 // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
+    }
 
 
 	        // Make an socketDATA array that the socket can push the JSON objects into, then sub out socketDATA for
@@ -117,77 +117,76 @@
 
 	        // This is where the sample chart is grabbing the data
 
-			function streamSimulation2(trade_object){
-				// Grab the next tick in the series
-				var newTick=trade_object;
-				// if(streamCounter==streamingData.length) streamCounter=0;
-				var currentTick = strToDateTime(newTick.Date);
-				// Compute the beginning time of the next bar
-				var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx);
+		function streamSimulation2(trade_object){
+			// Grab the next tick in the series
+			var newTick=trade_object;
+			// if(streamCounter==streamingData.length) streamCounter=0;
+			var currentTick = strToDateTime(newTick.Date);
+			// Compute the beginning time of the next bar
+			var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx);
 
-				// Determine whether to increment the bar time or not
-				var now=new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
-				if(now.getTime()>=nextTickTime.getTime()){
-					newTick.Date=yyyymmddhhmm(nextTickTime);
-					currentTick=nextTickTime;
-				}else{
-					newTick.Date=yyyymmddhhmm(currentTick);
-				}
-				// Inject the bar
-				stxx.appendMasterData([newTick]);
-
-				// Queue the next event
-				// setTimeout(streamSimulation,250);
+			// Determine whether to increment the bar time or not
+			var now=new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
+			if(now.getTime()>=nextTickTime.getTime()){
+				newTick.Date=yyyymmddhhmm(nextTickTime);
+				currentTick=nextTickTime;
+			}else{
+				newTick.Date=yyyymmddhhmm(currentTick);
 			}
+			// Inject the bar
+			stxx.appendMasterData([newTick]);
 
-		    function streamSimulation(trade_object){
-		    	// debugger;
-	            // Grab the next tick in the series
+			// Queue the next event
+			// setTimeout(streamSimulation,250);
+		}
 
-	            var newTick = trade_object;
-	            // clone(streamingData[streamingData[streamingData.length-1]])
+    function streamSimulation(trade_object){
+    	// debugger;
+        // Grab the next tick in the series
 
-	            // Compute the beginning time of the next bar
-	            // var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx)// How does this work? Whats the purpose?
+        var newTick = trade_object;
+        // clone(streamingData[streamingData[streamingData.length-1]])
 
-	            // Determine whether to increment the bar time or not
-	            // var now = new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
-	            // if(now.getTime()>=nextTickTime.getTime()){
-	            //         newTick.Date=yyyymmddhhmm(nextTickTime);
-	            //         currentTick=nextTickTime;
-	            // }else{
-	            //         newTick.Date=yyyymmddhhmm(currentTick);
-	            // }
-	            // Inject the bar
-	            newTick.Date = yyyymmddhhmm(strToDateTime(newTick.Date));
-	            stxx.appendMasterData([newTick]); // Add the new data point to the chart
+        // Compute the beginning time of the next bar
+        // var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx)// How does this work? Whats the purpose?
 
-	            // Queue the next event
-	        };
+        // Determine whether to increment the bar time or not
+        // var now = new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
+        // if(now.getTime()>=nextTickTime.getTime()){
+        //         newTick.Date=yyyymmddhhmm(nextTickTime);
+        //         currentTick=nextTickTime;
+        // }else{
+        //         newTick.Date=yyyymmddhhmm(currentTick);
+        // }
+        // Inject the bar
+        newTick.Date = yyyymmddhhmm(strToDateTime(newTick.Date));
+        stxx.appendMasterData([newTick]); // Add the new data point to the chart
 
-            displayChart();
+        // Queue the next event
+    };
 
-		    var socket = io.connect('http://localhost:8080');
+    displayChart();
 
-		    var streamingData= [];
+    var socket = io.connect('http://localhost:8080');
 
-		    socket.on('trades', function (minbar) {
-		    	// debugger;
+    var streamingData= [];
 
-		    	var new_minbar = {
-		    		Date: minbar.date,
-		    		Open: minbar.open,
-		    		High: minbar.high,
-		    		Low: minbar.low,
-		    		Close: minbar.close
-		    	}
-		    	console.log("We got a trade!!! " + minbar);
-		    	streamSimulation(new_minbar);
-		    });
+    socket.on('trades', function (minbar) {
+    	// debugger;
+
+    	var new_minbar = {
+    		Date: minbar.date,
+    		Open: minbar.open,
+    		High: minbar.high,
+    		Low: minbar.low,
+    		Close: minbar.close
+    	}
+    	console.log("We got a trade!!! " + minbar);
+    	streamSimulation(new_minbar);
+    });
 
         	// This is where the sample chart is grabbing the data
-
-        });
+  });
 
 </script>
 
@@ -209,44 +208,44 @@
 <script type="text/javascript" src="map_javascripts/worldLow.js"></script>
 
 <script type="text/javascript">
-        var map;
+  var map;
 
-        // svg path for target icon
-        var targetSVG = "M9,0C4.029,0,0,4.029,0,9s4.029,9,9,9s9-4.029,9-9S13.971,0,9,0z M9,15.93 c-3.83,0-6.93-3.1-6.93-6.93S5.17,2.07,9,2.07s6.93,3.1,6.93,6.93S12.83,15.93,9,15.93 M12.5,9c0,1.933-1.567,3.5-3.5,3.5S5.5,10.933,5.5,9S7.067,5.5,9,5.5 S12.5,7.067,12.5,9z";
+  // svg path for target icon
+  var targetSVG = "M9,0C4.029,0,0,4.029,0,9s4.029,9,9,9s9-4.029,9-9S13.971,0,9,0z M9,15.93 c-3.83,0-6.93-3.1-6.93-6.93S5.17,2.07,9,2.07s6.93,3.1,6.93,6.93S12.83,15.93,9,15.93 M12.5,9c0,1.933-1.567,3.5-3.5,3.5S5.5,10.933,5.5,9S7.067,5.5,9,5.5 S12.5,7.067,12.5,9z";
 
-        var update_chart = function () {
-            dataProvider.images.push(newest_json); // Put the newest location in the array
-            map.write("mapdiv");   // re-write the map
-            dataProvider.images = [];     // clear the locations array
-        }
+  var update_chart = function () {
+      dataProvider.images.push(newest_json); // Put the newest location in the array
+      map.write("mapdiv");   // re-write the map
+      dataProvider.images = [];     // clear the locations array
+  }
 
-        AmCharts.ready(function() {
-            map = new AmCharts.AmMap();
-            map.pathToImages = "images/";
-                //map.panEventsEnabled = true; // this line enables pinch-zooming and dragging on touch devices
+  AmCharts.ready(function() {
+      map = new AmCharts.AmMap();
+      map.pathToImages = "images/";
+          //map.panEventsEnabled = true; // this line enables pinch-zooming and dragging on touch devices
 
-            map.imagesSettings = {
-                rollOverColor: "#CC0000",
-                rollOverScale: 3,
-                selectedScale: 3,
-                selectedColor: "#CC0000"
-            };
+      map.imagesSettings = {
+          rollOverColor: "#CC0000",
+          rollOverScale: 3,
+          selectedScale: 3,
+          selectedColor: "#CC0000"
+      };
 
-            var dataProvider = {
-                mapVar: AmCharts.maps.worldLow,
-                images: [
-                                {svgPath:targetSVG, zoomLevel:5, scale:5.0, title:"Vienna", latitude:48.2092, longitude:16.3728},
-                {svgPath:targetSVG, zoomLevel:5, scale:0.5, title:"Minsk", latitude:53.9678, longitude:27.5766},
-                ]
-            };
+      var dataProvider = {
+          mapVar: AmCharts.maps.worldLow,
+          images: [
+                          {svgPath:targetSVG, zoomLevel:5, scale:5.0, title:"Vienna", latitude:48.2092, longitude:16.3728},
+          {svgPath:targetSVG, zoomLevel:5, scale:0.5, title:"Minsk", latitude:53.9678, longitude:27.5766},
+          ]
+      };
 
-            map.dataProvider = dataProvider;
+      map.dataProvider = dataProvider;
 
-            // map.objectList = new AmCharts.ObjectList("listdiv");
-            map.showImagesInList = false;
+      // map.objectList = new AmCharts.ObjectList("listdiv");
+      map.showImagesInList = false;
 
-            map.write("mapdiv");
-        });
+      map.write("mapdiv");
+  });
 </script>
 
 <script type="text/javascript" src="http://stocktwits.com/addon/widget/2/widget-loader.min.js"></script>

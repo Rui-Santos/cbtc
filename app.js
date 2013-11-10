@@ -82,10 +82,8 @@ var CreateNewTransaction = function (transaction_data, geo_cord_array) {
       } else {
         console.log("a transaction for " + transaction_object.value + " bitcoins happened at " + transaction_object["date"]);
         // io.sockets.on('connection', function (socket) {
-        socket_connections.forEach(function(socket) {
           console.log("transaction emitted " + transaction_object.value);
-          socket.emit('transactions', transaction_object);
-        });
+          io.sockets.emit('transactions', transaction_object);
         // });
         // this is where we could send the trade to jorges front end for the current price
       }
