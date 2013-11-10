@@ -270,7 +270,8 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
     }
     return dateObject;
   };
-  var formatted_date = addZero(currentTime.getFullYear()+currentTime.getMonth() + 1)+"-"+addZero(currentTime.getDate())+"-"+" "+addZero(currentTime.getHours())+":"+addZero(currentTime.getMinutes());
+  var formatted_date = addZero(currentTime.getFullYear()+"-"+addZero(currentTime.getMonth() + 1))+"-"+addZero(currentTime.getDate())+" "+addZero(currentTime.getHours())+":"+addZero(currentTime.getMinutes());
+  console.log(formatted_date);
   var tradeArray = [];
   var lastMinuteOfTrades = undefined;
   Trade.find()
