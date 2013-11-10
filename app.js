@@ -357,7 +357,7 @@ var start_app = function (Trade) {
 
   app.get('/', routes.index());
 
-  trade_data_obj = MinuteBar.find().sort( {date: 1} ).limit(30).exec( 
+  trade_data_obj = MinuteBar.find().sort( {date: 1} ).limit(3).exec( 
     function(err, docs) {
       return docs;
     });

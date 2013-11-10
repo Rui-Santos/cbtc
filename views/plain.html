@@ -70,7 +70,6 @@
 <script>
  
         $(document).ready(function() {
-        	debugger;
 	        var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
 	        stxx.manageTouchAndMouse=true;
 
@@ -93,12 +92,13 @@
 
 	        function displayChart(){
 	                stxx.chart.symbol="SPY";
-	                debugger;                                                    
+	                debugger;                                          
 	                // Set the internal symbol so that the display on the chart is correct
-	                for(var i = 1; i < trade_data.emitted.complete[0].length;i ++) {
+	                for(var i = 1; i < trade_data.emitted.complete[0].length; i ++) {
 	                	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
 	                }
 	                stxx.setMasterData(trade_data.emitted.complete[0]); // Initialize the data
+	                debugger;
 	                stxx.setPeriodicityV2(1,5);
 	                stxx.createDataSet();                                                                 // This step runs the calculations for any selected studies.
 	                stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
