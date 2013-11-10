@@ -64,27 +64,26 @@ function createStream(options) {
   return new MtGoxStream(options)
 }
 
+
 var socket_connections = [];
 
 io.sockets.on("connection", function(socket) {
   socket_connections.push(socket);
 });
 
-var CreateNewTransaction = function (transaction_data) {
+var CreateNewTransaction = function (transaction_data, geo_cord_array) {
   var a_transaction = new Transaction();
     a_transaction.date = JSON.parse(transaction_data)["x"]["time"];
     a_transaction.value = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000;
-    a_transaction.relayed_by = JSON.parse(transaction_data)["x"]["relayed_by"];
+    a_transaction.geo_location = geo_cord_array;
     a_transaction.save( function (err, transaction_object) {
       if (err) {
         console.log("error while saving transaction " + err)
       } else {
         console.log("a transaction for " + transaction_object.value + " bitcoins happened at " + transaction_object["date"]);
         // io.sockets.on('connection', function (socket) {
-        socket_connections.forEach(function(socket) {
           console.log("transaction emitted " + transaction_object.value);
-          socket.emit('transactions', transaction_object);
-        });
+          io.sockets.emit('transactions', transaction_object);
         // });
         // this is where we could send the trade to jorges front end for the current price
       }
@@ -107,7 +106,16 @@ function blockchain(options) {
 
   function output(data) {
     // console.log(JSON.parse(data));
-    CreateNewTransaction(data);
+    var geoip = require('geoip-lite');
+
+    var ip_ping = eval("("+data+")").x.relayed_by;
+    console.log(ip_ping);
+    var geo = geoip.lookup(ip_ping);
+    if(geo != null && geo["ll"]){
+      geo = geoip.lookup(ip_ping);
+      console.log(geo["ll"]);
+      CreateNewTransaction(data,geo["ll"]);
+    }
   }
 
   function subscribe(channel) {
@@ -117,7 +125,7 @@ function blockchain(options) {
 };
 
 var TransactionSchema = mongoose.Schema({
-  relayed_by: String,
+  geo_location: Array,
   value: Number,
   date: Date
 });
@@ -350,14 +358,18 @@ var start_app = function (Trade) {
   console.log("-----------------------------------------");
   console.log("-----------------------------------------");
   console.log("-----------------------------------------");
-  // console.log(MinuteBar.find().sort( {date: -1} ).limit(1).exec( 
+  // console.log(MinuteBar.find().sort( {date: -1} ).limit(1).exec(
   //   function(err, docs) {
   //     console.log(docs);
   //   }));
 
   app.get('/', routes.index());
 
+<<<<<<< HEAD
   trade_data_obj = MinuteBar.find().sort( {date: 1} ).limit(3).exec( 
+=======
+  trade_data_obj = MinuteBar.find().sort( {date: 1} ).limit(30).exec(
+>>>>>>> 005d0737db30f29fabc145d34c889e74683e031d
     function(err, docs) {
       return docs;
     });
