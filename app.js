@@ -168,10 +168,6 @@ function MtGoxStream(options) {
         console.log("error logging trade data " + err);
       } else {
         console.log("a trade for " + trade_object.amount + " happened at " + trade_object["date"]);
-        io.sockets.on('connection', function (socket) {
-          console.log("emitted trade at" + trade_object.date);
-          socket.emit('trades', trade_object);
-        });
         // this is where we could send the trade to jorges front end for the current price
       }
     });
@@ -245,13 +241,20 @@ var MinuteBarSchema = mongoose.Schema({
   low: Number,
   open: Number,
   close: Number,
-  date: Date,
+  date: String,
   volume: Number
 });
 
 var MinuteBar = mongoose.model('MinuteBar', MinuteBarSchema);
 
 var calculateNewMinuteBar = function (currentTime, timeBack) {
+  var addZero = function(dateObject) {
+    if (dateObject.toString().length === 1) {
+      return "0" + dateObject ;
+    }
+    return dateObject;
+  };
+  var formatted_date = addZero(currentTime.getMonth() + 1)+"-"+addZero(currentTime.getDate())+"-"+currentTime.getFullYear()+" "+addZero(currentTime.getHours())+":"+addZero(currentTime.getMinutes());
   var tradeArray = [];
   var lastMinuteOfTrades = undefined;
   Trade.find()
@@ -266,7 +269,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
             if (lastMinuteOfTrades.length > 0) {
               var count = 0;
               var newMinuteBar = new MinuteBar();
-              newMinuteBar.date = currentTime;
+              newMinuteBar.date = formatted_date;
               newMinuteBar.open = lastMinuteOfTrades[0].price;
               newMinuteBar.close = lastMinuteOfTrades[lastMinuteOfTrades.length - 1 ].price;
 
@@ -293,6 +296,9 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
                   // console.log("minute bar was created at " + minbar.date + "low amount was " + minbar.low);
                   console.log(count + " trades happened in the last minute!!!");
                   // send min bar to jorge nowwww
+                  io.sockets.on('connection', function (socket) {
+                    socket.emit('trades', minbar);
+                  });
                 }
               });
             }
