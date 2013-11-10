@@ -68,42 +68,43 @@
 <!-- The Chart -->
 
 <script>
- 
-        $(document).ready(function() {
-	        var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
-	        stxx.manageTouchAndMouse=true;
 
-	        function convertArrayToJson(quotes){
-	            var jsObj=[];
-	            for(var i=0;i<quotes.length;i++){
-	                    jsObj[i]={};
-	                    jsObj[i].Date=quotes[i][0];
-	                    jsObj[i].Open=quotes[i][1];
-	                    jsObj[i].High=quotes[i][2];
-	                    jsObj[i].Low=quotes[i][3];
-	                    jsObj[i].Close=quotes[i][4];
-	                    jsObj[i].Volume=quotes[i][5];
-	                    jsObj[i].Adj_Close=quotes[i][6];
-	            }
-	            return jsObj;
-        	}
+  $(document).ready(function() {
+    var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
+    stxx.manageTouchAndMouse=true;
 
-	        // Display the chart 
+    function convertArrayToJson(quotes){
+        var jsObj=[];
+        for(var i=0;i<quotes.length;i++){
+                jsObj[i]={};
+                jsObj[i].Date=quotes[i][0];
+                jsObj[i].Open=quotes[i][1];
+                jsObj[i].High=quotes[i][2];
+                jsObj[i].Low=quotes[i][3];
+                jsObj[i].Close=quotes[i][4];
+                jsObj[i].Volume=quotes[i][5];
+                jsObj[i].Adj_Close=quotes[i][6];
+        }
+        return jsObj;
+  	}
 
-	        function displayChart(){
-	                stxx.chart.symbol="SPY";
-	                debugger;                                          
-	                // Set the internal symbol so that the display on the chart is correct
-	                for(var i = 1; i < trade_data.emitted.complete[0].length; i ++) {
-	                	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
-	                }
-	                stxx.setMasterData(trade_data.emitted.complete[0]); // Initialize the data
-	                debugger;
-	                stxx.setPeriodicityV2(1,5);
-	                stxx.createDataSet();              // This step runs the calculations for any selected studies.
-	                stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
-	                stxx.draw();            // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
-	        }
+    // Display the chart
+
+    function displayChart(){
+      stxx.chart.symbol="BTC";
+      debugger;
+      console.log(trade_data.emitted.complete[0][0].date);
+      // Set the internal symbol so that the display on the chart is correct
+      for(var i = 0; i < trade_data.emitted.complete[0].length; i ++) {
+       	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
+      }
+      stxx.setMasterData(trade_data.emitted.complete[0]); // Initialize the data
+      debugger;
+      stxx.setPeriodicityV2(1,5);
+      stxx.createDataSet();              // This step runs the calculations for any selected studies.
+      stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
+      stxx.draw();            // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
+    }
 
 	        // Make an socketDATA array that the socket can push the JSON objects into, then sub out socketDATA for
 
@@ -173,6 +174,7 @@
     		Low: minbar.low,
     		Close: minbar.close
     	}
+
     	console.log("We got a trade!!! " + minbar);
     	streamSimulation(new_minbar);
     });

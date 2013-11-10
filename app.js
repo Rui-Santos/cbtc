@@ -270,7 +270,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
     }
     return dateObject;
   };
-  var formatted_date = addZero(currentTime.getMonth() + 1)+"-"+addZero(currentTime.getDate())+"-"+currentTime.getFullYear()+" "+addZero(currentTime.getHours())+":"+addZero(currentTime.getMinutes());
+  var formatted_date = addZero(currentTime.getFullYear()+currentTime.getMonth() + 1)+"-"+addZero(currentTime.getDate())+"-"+" "+addZero(currentTime.getHours())+":"+addZero(currentTime.getMinutes());
   var tradeArray = [];
   var lastMinuteOfTrades = undefined;
   Trade.find()
@@ -365,11 +365,7 @@ var start_app = function (Trade) {
 
   app.get('/', routes.index());
 
-<<<<<<< HEAD
-  trade_data_obj = MinuteBar.find().sort( {date: 1} ).limit(3).exec( 
-=======
-  trade_data_obj = MinuteBar.find().sort( {date: 1} ).limit(30).exec(
->>>>>>> 005d0737db30f29fabc145d34c889e74683e031d
+  trade_data_obj = MinuteBar.find().sort( {date: 1} ).limit(3).exec(
     function(err, docs) {
       return docs;
     });
