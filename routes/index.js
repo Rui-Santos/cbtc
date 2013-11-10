@@ -3,7 +3,9 @@
  * GET home page.
  */
 
-exports.index = function(req, res){
-  res.render('index', { title: 'BitCoin Magik' });
+exports.index = function(){
+  return function(req, res) {
+    res.render('index');
+  };
 };
 

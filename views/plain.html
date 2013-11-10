@@ -9,6 +9,7 @@
 <script type="text/javascript" src="javascripts/stxUtilities.js"></script>
 <script type="text/javascript" src="javascripts/stxMarket.js"></script>
 <script type="text/javascript" src="javascripts/stxStudies.js"></script>
+<script src="http://localhost:8080/socket.io/socket.io.js"></script>
 </head>
 
 <body>
@@ -61,96 +62,150 @@
 <script type="text/javascript" charset="ISO-8859-1" src="javascripts/stxModulus.js"></script>
 <script type="text/javascript" charset="ISO-8859-1" src="javascripts/stxKernelOs.js"></script>
 
+<script type="text/javascript" src="/trades"></script>
+
+
 <!-- The Chart -->
 
 <script>
-        var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
-        stxx.manageTouchAndMouse=true;
 
-        function convertArrayToJson(quotes){
-                var jsObj=[];
-                for(var i=0;i<quotes.length;i++){
-                        jsObj[i]={};
-                        jsObj[i].Date=quotes[i][0];
-                        jsObj[i].Open=quotes[i][1];
-                        jsObj[i].High=quotes[i][2];
-                        jsObj[i].Low=quotes[i][3];
-                        jsObj[i].Close=quotes[i][4];
-                        jsObj[i].Volume=quotes[i][5];
-                        jsObj[i].Adj_Close=quotes[i][6];
-                }
-                return jsObj;
-        }
+        $(document).ready(function() {
+        	debugger;
+	        var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
+	        stxx.manageTouchAndMouse=true;
 
-        // Display the chart
+	        function convertArrayToJson(quotes){
+	            var jsObj=[];
+	            for(var i=0;i<quotes.length;i++){
+	                    jsObj[i]={};
+	                    jsObj[i].Date=quotes[i][0];
+	                    jsObj[i].Open=quotes[i][1];
+	                    jsObj[i].High=quotes[i][2];
+	                    jsObj[i].Low=quotes[i][3];
+	                    jsObj[i].Close=quotes[i][4];
+	                    jsObj[i].Volume=quotes[i][5];
+	                    jsObj[i].Adj_Close=quotes[i][6];
+	            }
+	            return jsObj;
+        	}
 
-        function displayChart(){
-                stxx.chart.symbol="SPY";                                                         // Set the internal symbol so that the display on the chart is correct
-                stxx.setMasterData(convertArrayToJson(sampleData)); // Initialize the data
-                stxx.setPeriodicityV2(1,5);
-                stxx.createDataSet();                                                                 // This step runs the calculations for any selected studies.
-                stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
-                stxx.draw();                                                                                 // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
-        }
+	        // Display the chart
+
 
         // Make an socketDATA array that the socket can push the JSON objects into, then sub out socketDATA for
 
 
         // This is where the sample chart is grabbing the data
-        var streamingData=[
-                {Date:null,Open:155.43,High:155.44,Low:155.39,Close:155.4,Volume:466380},
-                {Date:null,Open:155.41,High:155.48,Low:155.4,Close:155.46,Volume:466480},
-                {Date:null,Open:155.45,High:155.55,Low:155.43,Close:155.5,Volume:466580},
-                {Date:null,Open:155.49,High:155.51,Low:155.41,Close:155.41,Volume:466680},
-                {Date:null,Open:155.41,High:155.49,Low:155.38,Close:155.47,Volume:466780},
-                {Date:null,Open:155.47,High:155.5,Low:155.44,Close:155.45,Volume:466880},
-                {Date:null,Open:155.45,High:155.47,Low:155.43,Close:155.46,Volume:500},
-                {Date:null,Open:155.47,High:155.5,Low:155.44,Close:155.48,Volume:1000},
-                {Date:null,Open:155.49,High:155.49,Low:155.46,Close:155.47,Volume:30000},
-                {Date:null,Open:155.47,High:155.53,Low:155.46,Close:155.51,Volume:100000},
-                {Date:null,Open:155.51,High:155.52,Low:155.45,Close:155.47,Volume:3000},
-                {Date:null,Open:155.46,High:155.47,Low:155.37,Close:155.41,Volume:50000},
-                {Date:null,Open:155.41,High:155.42,Low:155.38,Close:155.41,Volume:100000},
-                {Date:null,Open:155.41,High:155.46,Low:155.4,Close:155.45,Volume:400000},
-                {Date:null,Open:155.32,High:155.48,Low:155.3,Close:155.41,Volume:500000}
-        ];
-        var streamCounter=0;
-        var startTick=strToDateTime("2013-03-20 13:40");
-        var currentTick=startTick;
-        var streamStartTime=new Date().getTime();
-        function streamSimulation(){
-                // Grab the next tick in the series
-                var newTick = clone(streamingData[streamCounter++]); // What is clone? Add the socket JSON here
-                if(streamCounter == streamingData.length) streamCounter=0; // This can be deleted
 
-                // Compute the beginning time of the next bar
-                var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx); // How does this work? Whats the purpose?
+	        function displayChart(){
+	                stxx.chart.symbol="SPY";
+	                debugger;
+	                // Set the internal symbol so that the display on the chart is correct
+	                for(var i = 1; i < trade_data.emitted.complete[0].length;i ++) {
+	                	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
+	                }
+	                stxx.setMasterData(trade_data.emitted.complete[0]); // Initialize the data
+	                stxx.setPeriodicityV2(1,5);
+	                stxx.createDataSet();                                                                 // This step runs the calculations for any selected studies.
+	                stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
+	                stxx.draw();                                                                                 // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
+	        }
 
-                // Determine whether to increment the bar time or not
-                var now=new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
-                if(now.getTime()>=nextTickTime.getTime()){
-                        newTick.Date=yyyymmddhhmm(nextTickTime);
-                        currentTick=nextTickTime;
-                }else{
-                        newTick.Date=yyyymmddhhmm(currentTick);
-                }
-                // Inject the bar
-                stxx.appendMasterData([newTick]); // Add the new data point to the chart
 
-                // Queue the next event
-                setTimeout(streamSimulation,250);
-        }
+	        // Make an socketDATA array that the socket can push the JSON objects into, then sub out socketDATA for
 
-        $(document).ready(function() {
-                displayChart();
-                streamSimulation();
+
+	        // This is where the sample chart is grabbing the data
+
+			function streamSimulation2(trade_object){
+				// Grab the next tick in the series
+				var newTick=trade_object;
+				// if(streamCounter==streamingData.length) streamCounter=0;
+				var currentTick = strToDateTime(newTick.Date);
+				// Compute the beginning time of the next bar
+				var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx);
+
+				// Determine whether to increment the bar time or not
+				var now=new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
+				if(now.getTime()>=nextTickTime.getTime()){
+					newTick.Date=yyyymmddhhmm(nextTickTime);
+					currentTick=nextTickTime;
+				}else{
+					newTick.Date=yyyymmddhhmm(currentTick);
+				}
+				// Inject the bar
+				stxx.appendMasterData([newTick]);
+
+				// Queue the next event
+				// setTimeout(streamSimulation,250);
+			}
+
+		    function streamSimulation(trade_object){
+		    	// debugger;
+	            // Grab the next tick in the series
+
+	            var newTick = trade_object;
+	            // clone(streamingData[streamingData[streamingData.length-1]])
+
+	            // Compute the beginning time of the next bar
+	            // var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx)// How does this work? Whats the purpose?
+
+	            // Determine whether to increment the bar time or not
+	            // var now = new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
+	            // if(now.getTime()>=nextTickTime.getTime()){
+	            //         newTick.Date=yyyymmddhhmm(nextTickTime);
+	            //         currentTick=nextTickTime;
+	            // }else{
+	            //         newTick.Date=yyyymmddhhmm(currentTick);
+	            // }
+	            // Inject the bar
+	            newTick.Date = yyyymmddhhmm(strToDateTime(newTick.Date));
+	            stxx.appendMasterData([newTick]); // Add the new data point to the chart
+
+	            // Queue the next event
+	        };
+
+            displayChart();
+
+		    var socket = io.connect('http://localhost:8080');
+
+		    var streamingData= [];
+
+		    socket.on('trades', function (minbar) {
+		    	// debugger;
+
+		    	var new_minbar = {
+		    		Date: minbar.date,
+		    		Open: minbar.open,
+		    		High: minbar.high,
+		    		Low: minbar.low,
+		    		Close: minbar.close
+		    	}
+		    	console.log("We got a trade!!! " + minbar);
+		    	streamSimulation(new_minbar);
+		    });
+
+        	// This is where the sample chart is grabbing the data
+
         });
+
 </script>
+
+
+
+
+
+
+
+
+
+
 
 <!-- The Map -->
 
 <script type="text/javascript" src="map_javascripts/ammap.js"></script>
 <!-- map file should be included after ammap.js -->
+
 <script type="text/javascript" src="map_javascripts/worldLow.js"></script>
 
 <script type="text/javascript">
