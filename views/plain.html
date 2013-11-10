@@ -4,7 +4,8 @@
 <link rel="stylesheet" type="text/css" href="stylesheets/stx-demo.css" media="screen" />    <!-- Style sheet for stx-demo.js -->
 <link rel="stylesheet" href="stylesheets/ammap.css" type="text/css">
 
-<script type="text/javascript" src="javascripts/SAMPLEDATA.js"></script>   <!-- Sample data -->
+<script type="text/javascript" src="javascripts/SAMPLEINTRADAY.js"></script>
+<!-- Sample data -->
 
 <script type="text/javascript" src="javascripts/stxUtilities.js"></script>
 <script type="text/javascript" src="javascripts/stxMarket.js"></script>
@@ -93,12 +94,12 @@
     function displayChart(){
       stxx.chart.symbol="BTC";
       debugger;
-      console.log(trade_data.emitted.complete[0][0].date);
       // Set the internal symbol so that the display on the chart is correct
-      for(var i = 0; i < trade_data.emitted.complete[0].length; i ++) {
-       	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
-      }
-      stxx.setMasterData(trade_data.emitted.complete[0]); // Initialize the data
+      // for(var i = 0; i < trade_data.emitted.complete[0].length; i ++) {
+      //  	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
+      // }
+      // console.log(strToDateTimesampleData);
+      stxx.setMasterData(convertArrayToJson(sampleDataIntraday)); // Initialize the data
       debugger;
       stxx.setPeriodicityV2(1,5);
       stxx.createDataSet();              // This step runs the calculations for any selected studies.
@@ -110,28 +111,28 @@
 
 	        // This is where the sample chart is grabbing the data
 
-		function streamSimulation2(trade_object){
-			// Grab the next tick in the series
-			var newTick=trade_object;
-			// if(streamCounter==streamingData.length) streamCounter=0;
-			var currentTick = strToDateTime(newTick.Date);
-			// Compute the beginning time of the next bar
-			var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx);
+		// function streamSimulation2(trade_object){
+		// 	// Grab the next tick in the series
+		// 	var newTick=trade_object;
+		// 	// if(streamCounter==streamingData.length) streamCounter=0;
+		// 	var currentTick = strToDateTime(newTick.Date);
+		// 	// Compute the beginning time of the next bar
+		// 	var nextTickTime=STXMarket.nextPeriod(currentTick, stxx.layout.interval, 1, stxx);
 
-			// Determine whether to increment the bar time or not
-			var now=new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
-			if(now.getTime()>=nextTickTime.getTime()){
-				newTick.Date=yyyymmddhhmm(nextTickTime);
-				currentTick=nextTickTime;
-			}else{
-				newTick.Date=yyyymmddhhmm(currentTick);
-			}
-			// Inject the bar
-			stxx.appendMasterData([newTick]);
+		// 	// Determine whether to increment the bar time or not
+		// 	var now=new Date(startTick.getTime()+(new Date().getTime()-streamStartTime));
+		// 	if(now.getTime()>=nextTickTime.getTime()){
+		// 		newTick.Date=yyyymmddhhmm(nextTickTime);
+		// 		currentTick=nextTickTime;
+		// 	}else{
+		// 		newTick.Date=yyyymmddhhmm(currentTick);
+		// 	}
+		// 	// Inject the bar
+		// 	stxx.appendMasterData([newTick]);
 
-			// Queue the next event
-			// setTimeout(streamSimulation,250);
-		}
+		// 	// Queue the next event
+		// 	// setTimeout(streamSimulation,250);
+		// }
 
     function streamSimulation(trade_object){
     	// debugger;
@@ -152,6 +153,7 @@
         //         newTick.Date=yyyymmddhhmm(currentTick);
         // }
         // Inject the bar
+        console.log("hi");
         newTick.Date = yyyymmddhhmm(strToDateTime(newTick.Date));
         stxx.appendMasterData([newTick]); // Add the new data point to the chart
 
@@ -174,6 +176,8 @@
     		Low: minbar.low,
     		Close: minbar.close
     	}
+
+      console.log(new_minbar)
 
     	console.log("We got a trade!!! " + minbar);
     	streamSimulation(new_minbar);
