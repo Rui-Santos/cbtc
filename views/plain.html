@@ -71,8 +71,8 @@
 <script>
 
   $(document).ready(function() {
-    var stxx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
-    stxx.manageTouchAndMouse=true;
+    var stx=new STXChart(); // Declare a STXChart object. This is the main object for drawing charts.
+    stx.manageTouchAndMouse=true;
 
     function convertArrayToJson(quotes){
         var jsObj=[];
@@ -92,26 +92,31 @@
     // Display the chart
 
     function displayChart(){
-      stxx.chart.symbol="BTC";
+      stx.chart.symbol="BTC";
       // Set the internal symbol so that the display on the chart is correct
       // for(var i = 0; i < trade_data.emitted.complete[0].length; i ++) {
       //  	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
       // }
       // console.log(strToDateTimesampleData);
-      stxx.setMasterData(convertArrayToJson(sampleDataIntraday)); // Initialize the data
-      stxx.setPeriodicityV2(1,1);
-      stxx.createDataSet();              // This step runs the calculations for any selected studies.
-      stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
-      stxx.draw();
+      stx.setMasterData(convertArrayToJson(sampleDataIntraday)); // Initialize the data
+      stx.setPeriodicityV2(1,1);
+      stx.createDataSet();              // This step runs the calculations for any selected studies.
+      stx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
+      stx.draw();
       // var inputs={"Period":50, "Field":"Close","Type":"simple"};
 
-      // var inputs={
-      //   Period:"7"
-      // };
-      // var sd = stxStudies.qucikAddStudy(stxx, "rsi", inputs);
+      var inputs1={
+        "Period": 2
+      };
+      var inputs={
+        "Period": 3,
+        "Shift": 1,
+        "Moving Average Type": "ema"
+      };
+      STXStudies.quickAddStudy(stx, "rsi", inputs1);
+      STXStudies.quickAddStudy(stx, "Keltner", inputs);
                   // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
     }
-
 	        // Make an socketDATA array that the socket can push the JSON objects into, then sub out socketDATA for
 
 	        // This is where the sample chart is grabbing the data
@@ -160,7 +165,7 @@
         // Inject the bar
         console.log("hi");
         newTick.Date = yyyymmddhhmm(strToDateTime(newTick.Date));
-        stxx.appendMasterData([newTick]); // Add the new data point to the chart
+        stx.appendMasterData([newTick]); // Add the new data point to the chart
 
         // Queue the next event
     };
