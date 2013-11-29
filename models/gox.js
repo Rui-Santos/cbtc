@@ -1,111 +1,129 @@
-#!/usr/bin/env node
+// start mgox streaming
+module.exports = function(mongoose, Trade) {
+  // var Trade = require('./trades')(mongoose);
+  console.log("trying to start_mtgox_stream");
+  var Readable  = require('./../readable');
+  var Websocket = require('ws');
+  var xtend     = require('xtend');
+  var inherits  = require('util').inherits;
 
-var Readable  = require('./../readable')
-var Websocket = require('ws')
-var xtend     = require('xtend')
-var inherits  = require('util').inherits
+  // var defaultOptions = {
+  //         currency: 'USD'
+  //       , ticker: false
+  //       , depth: false
+  //       , trade: true
+  //       , lag: false
+  //     };
 
-module.exports = {
-    createStream: createStream
-  , currencies: currencies
-}
+  var MtGoxStream = function() {
+    // console.log("creating new mtgox connection");
+    // options = xtend(defaultOptions, options);
+    var options = {
+          currency: 'USD'
+        , ticker: false
+        , depth: false
+        , trade: true
+        , lag: false
+      };
 
-var defaultOptions = {
-        currency: 'USD'
-      , ticker: true
-      , depth: false
-      , trade: false
-      , lag: false
-    }
+    Readable.call(this, { objectMode: true });
 
-function createStream(options) {
-  return new MtGoxStream(options)
-}
+    var self = this;
+    var ws = null;
 
-function MtGoxStream(options) {
-  options = xtend(defaultOptions, options)
+    this._read = function () {
+      if (ws) return
 
-  Readable.call(this, { objectMode: true })
+      var url = 'wss://websocket.mtgox.com';
+      console.log("url: " + url);
+      ws = new Websocket(url);
 
-  var self = this
-  var ws = null
+      ws.on('open', function() {
+        console.log('connected to:', url)
+        if (options.ticker) subscribe('ticker.BTC' + options.currency)
+        if (options.depth) subscribe('depth.BTC' + options.currency)
+        if (options.trade) subscribe('trade.BTC')
+        if (options.lag) subscribe('trade.lag')
+      });
 
-  this._read = function () {
-    if (ws) return
+      ws.on('message', function(data) {
+        if (isValid(data)) { output(data) }
+      });
+    };
 
-    var url = 'wss://websocket.mtgox.com'
-    ws = new Websocket(url)
-
-    ws.on('open', function() {
-      console.log('connected to:', url)
-      if (options.ticker) subscribe('ticker.BTC' + options.currency)
-      if (options.depth) subscribe('depth.BTC' + options.currency)
-      if (options.trade) subscribe('trade.BTC')
-      if (options.lag) subscribe('trade.lag')
-    })
-
-    ws.on('message', function(data) {
-      if (isValid(data)) output(data)
-    })
-  }
-
-  function isValid(data) {
-    try {
-      var obj = JSON.parse(data)
-      if (obj.channel && obj.channel_name) {
-        if ('trade.BTC' !== obj.channel_name) {
-          return true
+    function isValid(data) {
+      try {
+        var obj = JSON.parse(data);
+        if (obj.channel && obj.channel_name) {
+          if ('trade.BTC' !== obj.channel_name) {
+            return true;
+          }
+          return obj.trade.price_currency === options.currency;
         }
-        return obj.trade.price_currency === options.currency
+      } catch (err) {
+        console.log('invalid json data', data);
       }
-    } catch (err) {
-      console.log('invalid json data', data)
-    }
-    return false
-  }
+      return false;
+    };
 
-  function output(data) {
+    function output(data) {
+      var trade = new Trade(JSON.parse(data)["trade"]);
+      trade.date = (trade.date * 1000);
+      trade.save( function (err, trade_object) {
+        if (err) {
+          // god i hope we dont get errors
+          console.log("error logging trade data " + err);
+        } else {
+          console.log("a trade for " + trade_object.amount + " happened at " + trade_object.date);
+          // this is where we could send the trade to jorges front end for the current price
+        }
+      });
+    };
 
-    self.push(data)
-    self.push('\n')
-  }
+    function subscribe(channel) {
+      console.log('subscribing to channel:', channel);
+      ws.send(JSON.stringify({ op: 'mtgox.subscribe', channel: channel }));
+    };
+  };
 
-  function subscribe(channel) {
-    console.log('subscribing to channel:', channel)
-    ws.send(JSON.stringify({ op: 'mtgox.subscribe', channel: channel }))
-  }
+  inherits(MtGoxStream, Readable);
+
+  function createStream(options) {
+    var gox = new MtGoxStream();
+    gox._read();
+    return gox;
+  };
+
+
+
+  // function currencies() {
+  //   return [
+  //       'USD'
+  //     , 'AUD'
+  //     , 'CAD'
+  //     , 'CHF'
+  //     , 'CNY'
+  //     , 'DKK'
+  //     , 'EUR'
+  //     , 'GBP'
+  //     , 'HKD'
+  //     , 'JPY'
+  //     , 'NZD'
+  //     , 'PLN'
+  //     , 'RUB'
+  //     , 'SEK'
+  //     , 'SGD'
+  //     , 'THB'
+  //   ]
+  // }
+
+  // var start_mtgox_stream = function () {
+  //   // if (!module.parent) {
+  //     var usd = new MtGoxStream({ticker: false, depth: false, trade: true});
+  //     // usd.pipe(process.stdout);
+  //   // }
+  // };
+
+  return createStream;
 }
 
-inherits(MtGoxStream, Readable)
-
-function currencies() {
-  return [
-      'USD'
-    , 'AUD'
-    , 'CAD'
-    , 'CHF'
-    , 'CNY'
-    , 'DKK'
-    , 'EUR'
-    , 'GBP'
-    , 'HKD'
-    , 'JPY'
-    , 'NZD'
-    , 'PLN'
-    , 'RUB'
-    , 'SEK'
-    , 'SGD'
-    , 'THB'
-  ]
-}
-
-var start_mtgox_stream = function () {
-  if (!module.parent) {
-    var usd = new MtGoxStream({ticker: false, depth: false, trade: true})
-    usd.pipe(process.stdout)
-    // var eur = new MtGoxStream({ currency: 'EUR', ticker: false, depth: true })
-    // eur.pipe(require('fs').createWriteStream('EUR'))
-  }
-};
-
-exports.start_mtgox_stream = start_mtgox_stream;
