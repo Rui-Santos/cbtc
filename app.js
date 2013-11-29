@@ -72,25 +72,31 @@ io.sockets.on("connection", function(socket) {
 });
 
 var CreateNewTransaction = function (transaction_data, geo_cord_array) {
-  var a_transaction = new Transaction();
-    a_transaction.date = JSON.parse(transaction_data)["x"]["time"];
-    a_transaction.value = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000;
-    a_transaction.geo_location = geo_cord_array;
-    a_transaction.save( function (err, transaction_object) {
-      if (err) {
-        console.log("error while saving transaction " + err)
-      } else {
-        console.log("a transaction for " + transaction_object.value + " bitcoins happened at " + transaction_object["date"]);
-        // io.sockets.on('connection', function (socket) {
-          console.log("transaction emitted " + transaction_object.value);
-          io.sockets.emit('transactions', transaction_object);
+  console.log("geo_cord_array"+geo_cord_array)
+  var transaction_size = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000
+  var transaction_data_array = geo_cord_array.push(transaction_size);
+  console.log("transaction_data_array"+transaction_data_array[2])
+  io.sockets.emit('transactions', transaction_data_array);
+  // console.log("CREATE NEW TRANSACTION")
+  // var a_transaction = new Transaction();
+  //   a_transaction.date = JSON.parse(transaction_data)["x"]["time"];
+  //   a_transaction.value = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000;
+  //   a_transaction.geo_location = geo_cord_array;
+  //   a_transaction.save( function (err, transaction_object) {
+  //     if (err) {
+  //       console.log("error while saving transaction " + err)
+  //     } else {
+  //       console.log("a transaction for " + transaction_object.value + " bitcoins happened at " + transaction_object["date"]);
+  //       // io.sockets.on('connection', function (socket) {
+  //         console.log("transaction emitted " + transaction_object.value);
+          // io.sockets.emit('transactions', geo_cord_array);
         // });
         // this is where we could send the trade to jorges front end for the current price
-      }
-    });
+    //   }
+    // });
 };
 
-function blockchain(options) {
+function Blockchain(options) {
 
   var url = 'ws://ws.blockchain.info/inv'
   ws = new Websocket(url)
@@ -124,13 +130,13 @@ function blockchain(options) {
   }
 };
 
-var TransactionSchema = mongoose.Schema({
-  geo_location: Array,
-  value: Number,
-  date: Date
-});
+// var TransactionSchema = mongoose.Schema({
+//   geo_location: Array,
+//   value: Number,
+//   date: Date
+// });
 
-var Transaction = mongoose.model('Transaction', TransactionSchema);
+// var Transaction = mongoose.model('Transaction', TransactionSchema);
 
 function MtGoxStream(options) {
   options = xtend(defaultOptions, options)
@@ -338,7 +344,7 @@ db.once('open', function callback () {
   console.log(startDate);
   start_app(Trade);
   start_mtgox_stream();
-  blockchain();
+  Blockchain();
 });
 
 // MinuteBar.find().sort({date: -1}).limit(1);
@@ -379,8 +385,24 @@ var start_app = function (Trade) {
   });
 
   app.get('/last', function(req, res) {
-    var lastTrade = MinuteBar.find().sort( {date: -1} ).limit(1);
+    var lastTrade = MinuteBar.find().limit(1).exec();
     res.json(lastTrade);
+  });
+
+  app.get('/fake_trade', function(req, res) {
+    var minbar = {
+      high: 350,
+      low: 340,
+      open: 340,
+      close: 345,
+      date: "2013-11-09 00:25",
+      volume: 2000
+    };
+        io.sockets.emit('trades', minbar);
+
+    res.json(minbar);
+
+
   });
 
 

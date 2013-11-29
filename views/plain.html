@@ -93,18 +93,23 @@
 
     function displayChart(){
       stxx.chart.symbol="BTC";
-      debugger;
       // Set the internal symbol so that the display on the chart is correct
       // for(var i = 0; i < trade_data.emitted.complete[0].length; i ++) {
       //  	trade_data.emitted.complete[0][i].date = yyyymmddhhmm(strToDateTime(trade_data.emitted.complete[0][i].date));
       // }
       // console.log(strToDateTimesampleData);
       stxx.setMasterData(convertArrayToJson(sampleDataIntraday)); // Initialize the data
-      debugger;
-      stxx.setPeriodicityV2(1,5);
+      stxx.setPeriodicityV2(1,1);
       stxx.createDataSet();              // This step runs the calculations for any selected studies.
       stxx.initializeChart($$("chartContainer"));                 // This initializes the chart to the container. Any existing canvases are removed.
-      stxx.draw();            // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
+      stxx.draw();
+      // var inputs={"Period":50, "Field":"Close","Type":"simple"};
+
+      // var inputs={
+      //   Period:"7"
+      // };
+      // var sd = stxStudies.qucikAddStudy(stxx, "rsi", inputs);
+                  // Draw the chart. (This function is called continuously whenever the user scrolls, zooms, draws, etc)
     }
 
 	        // Make an socketDATA array that the socket can push the JSON objects into, then sub out socketDATA for
@@ -160,6 +165,7 @@
         // Queue the next event
     };
 
+
     displayChart();
 
     var socket = io.connect('http://localhost:8080');
@@ -181,6 +187,11 @@
 
     	console.log("We got a trade!!! " + minbar);
     	streamSimulation(new_minbar);
+    });
+
+    socket.on('transactions', function (geo){
+      console.log("GEOOOOO"+geo)
+      update_chart(geo);
     });
 
         	// This is where the sample chart is grabbing the data
@@ -211,10 +222,31 @@
   // svg path for target icon
   var targetSVG = "M9,0C4.029,0,0,4.029,0,9s4.029,9,9,9s9-4.029,9-9S13.971,0,9,0z M9,15.93 c-3.83,0-6.93-3.1-6.93-6.93S5.17,2.07,9,2.07s6.93,3.1,6.93,6.93S12.83,15.93,9,15.93 M12.5,9c0,1.933-1.567,3.5-3.5,3.5S5.5,10.933,5.5,9S7.067,5.5,9,5.5 S12.5,7.067,12.5,9z";
 
-  var update_chart = function () {
-      dataProvider.images.push(newest_json); // Put the newest location in the array
-      map.write("mapdiv");   // re-write the map
-      dataProvider.images = [];     // clear the locations array
+  var scaler = function(size){
+    if(size < 1){
+      return 0.2
+    }else if(size < 10){
+      return 1.0
+    }else if(size < 50){
+      return 2.5
+    }else{
+      return 5.0
+    }
+  }
+
+  var update_chart = function (geo) {
+      map.dataProvider.images = [];
+      var new_spot = {
+        svgPath: targetSVG,
+        zoomLevel:5,
+        scale: scaler(geo[2]),
+        title: "transaction",
+        latitude: geo[0],
+        longitude: geo[1],
+      };
+      map.dataProvider.images.push(new_spot); // Put the newest location in the array
+      map.validateData();   // re-write the map
+    // clear the locations array
   }
 
   AmCharts.ready(function() {
@@ -233,15 +265,11 @@
           mapVar: AmCharts.maps.worldLow,
           images: [
                           {svgPath:targetSVG, zoomLevel:5, scale:5.0, title:"Vienna", latitude:48.2092, longitude:16.3728},
-          {svgPath:targetSVG, zoomLevel:5, scale:0.5, title:"Minsk", latitude:53.9678, longitude:27.5766},
           ]
       };
-
       map.dataProvider = dataProvider;
-
       // map.objectList = new AmCharts.ObjectList("listdiv");
       map.showImagesInList = false;
-
       map.write("mapdiv");
   });
 </script>
