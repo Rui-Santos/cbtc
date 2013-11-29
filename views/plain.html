@@ -224,11 +224,11 @@
 
   var scaler = function(size){
     if(size < 1){
-      return 0.2
-    }else if(size < 10){
       return 1.0
+    }else if(size < 10){
+      return 2.0
     }else if(size < 50){
-      return 2.5
+      return 3.0
     }else{
       return 5.0
     }
@@ -236,6 +236,7 @@
 
   var update_chart = function (geo) {
       map.dataProvider.images = [];
+      console.log("geo2"+geo[2]);
       var new_spot = {
         svgPath: targetSVG,
         zoomLevel:5,

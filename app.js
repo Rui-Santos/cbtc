@@ -72,10 +72,9 @@ io.sockets.on("connection", function(socket) {
 });
 
 var CreateNewTransaction = function (transaction_data, geo_cord_array) {
-  console.log("geo_cord_array"+geo_cord_array)
-  var transaction_size = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000
-  var transaction_data_array = geo_cord_array.push(transaction_size);
-  console.log("transaction_data_array"+transaction_data_array[2])
+  var transaction_size = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000;
+  var transaction_data_array = [geo_cord_array[0], geo_cord_array[1], transaction_size];
+  console.log("transaction_data_array"+transaction_data_array);
   io.sockets.emit('transactions', transaction_data_array);
   // console.log("CREATE NEW TRANSACTION")
   // var a_transaction = new Transaction();
