@@ -62,7 +62,7 @@ STXStudies.go=function(div, stx){
 				inputs.id+=",";
 			}
 			if(inputDOM.getAttribute("type")=="checkbox"){
-				inputs.id+=inputDOM.checked?"T":"F";				
+				inputs.id+=inputDOM.checked?"T":"F";
 			}else{
 				var translatedValue=value;
 				if(stx) translatedValue=stx.translateIf(translatedValue);
@@ -84,7 +84,7 @@ STXStudies.go=function(div, stx){
 		}
 	}
 	//if(div.stx.panelExists(inputs.id)) return null;
-	
+
 	var parameters={};
 	STXStudies.getCustomParameters(div, parameters);
 	var sd=STXStudies.addStudy(div.stx, div.study, inputs, outputs, parameters);
@@ -137,7 +137,7 @@ STXStudies.prepareStudy=function(stx, study, sd){
 			stx.overlays[sd.name]=sd;
 		}
 	}
-	
+
 };
 
 STXStudies.addStudy=function(stx, type, inputs, outputs, parameters){
@@ -163,8 +163,8 @@ STXStudies.addStudy=function(stx, type, inputs, outputs, parameters){
 STXStudies.quickAddStudy=function(stx, studyName, inputs, parameters){
 	if(!parameters) parameters={};
 	var sl=STXStudies.studyLibrary[studyName];
-	inputs.id=STXStudies.generateID(stxx, studyName, inputs);
-	var sd=STXStudies.addStudy(stxx, studyName, inputs, sl.outputs, parameters);
+	inputs.id=STXStudies.generateID(stx, studyName, inputs);
+	var sd=STXStudies.addStudy(stx, studyName, inputs, sl.outputs, parameters);
 	return sd;
 };
 
@@ -183,7 +183,7 @@ STXStudies.studyDialog=function(stx, study, div){
 	div.style.display="block";
 	div.study=study;
 	div.stx=stx;
-	
+
 	var inputs=div.querySelectorAll("#inputs")[0];
 	var inputItems=inputs.querySelectorAll(".inputTemplate");
 	for(var i=0;i<inputItems.length;i++){
@@ -265,10 +265,10 @@ STXStudies.studyDialog=function(stx, study, div){
 		}else{
 			if(stx.defaultColor=="#FFFFFF") appendClassName(colorClick, "stxColorDarkChart");
 		}
-		
+
 		STX.attachColorPicker(colorClick, STXStudies);
 	}
-	
+
 	// Optional parameters for studies. This is driven by a UI template that must be created by the developer, and which
 	// is referenced from the study description (studyLibrary entry).
 	var parametersEL=div.querySelectorAll("#parameters")[0];
@@ -371,7 +371,7 @@ STXStudies.determineMinMax=function(stx, sd, quotes){
 	if(panel.max>0 && panel.bottom<0) panel.shadow=panel.max + panel.min*-1;
 	if(panel.min<0 && panel.max>0){
 		if(!sd.libraryEntry || !sd.libraryEntry["nohorizontal"])
-			STXStudies.drawHorizontal(stx, sd, quotes, 0);		
+			STXStudies.drawHorizontal(stx, sd, quotes, 0);
 	}
 };
 
@@ -419,7 +419,7 @@ STXStudies.displayIndividualSeriesAsLine=function(stx, sd, panel, name, quotes){
 					stx.chart.context.moveTo(x,y);
 					continue;
 				}
-				reset=true;				
+				reset=true;
 			}else if(y>b){
 				y=b;
 				if(reset){
@@ -496,7 +496,7 @@ STXStudies.setIdealTicks=function(stx, panel, pixels){
 			panel.priceTick=Math.floor(panel.shadow/idealTicks*100)/100;
 			if(panel.priceTick<=0) panel.priceTick=.01;
 		}
-	}	
+	}
 };
 
 STXStudies.fitAxisToSeries=function(stx, panel){
@@ -581,7 +581,7 @@ STXStudies.displayPSAR=function(stx, sd, x, quotes){
 STXStudies.createHistogram=function(stx, sd, quotes, centered){
 	STXStudies.determineMinMax(stx, sd, quotes);
 	var panel = stx.panels[sd.name];
-	
+
 	var myWidth=stx.layout.candleWidth-2;
 	if(myWidth<2) myWidth=1;
 	var yPixels=(panel.height-1)/panel.shadow;
@@ -657,7 +657,7 @@ STXStudies.initializeFN=function(stx, type, inputs, outputs, parameters){
 		var panel=null;
 		if(inputs["Field"]){
 			panel=STXStudies.plottedSeries[inputs["Field"]];
-			if(inputs["Field"]=="Volume") panel="vchart";		
+			if(inputs["Field"]=="Volume") panel="vchart";
 		}
 		if(!panel) panel="chart";
 		sd.panel=panel;
@@ -692,7 +692,7 @@ STXStudies.overZones=function(stx, sd, quotes){
 		stx.plotLine(0,stx.chart.width-5, overBoughtY, overBoughtY, sd.parameters.studyOverBoughtColor, "segment", stx.chart.context, false, parameters);
 		stx.chart.context.globalAlpha=.2;
 		stx.plotLine(0,stx.chart.width-5, overSoldY, overSoldY, sd.parameters.studyOverSoldColor, "segment", stx.chart.context, false, parameters);
-		
+
 		if(!sd.libraryEntry.yaxis){
 			// Draw the y-axis with overbought/oversold
 			var fontHeight=stx.getCanvasFontSize("stx_yaxis");

@@ -52,6 +52,7 @@ if ('development' == app.get('env')) {
 db.on('error', console.error.bind(console, ' database connection error:'));
 
 // start database connection
+
 db.once('open', function callback () {
   // start mtgox streaming
   start_mtgox_stream();
