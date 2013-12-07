@@ -1,4 +1,4 @@
-// -------------------------------------------------------------------------------------------
+﻿// -------------------------------------------------------------------------------------------
 // Copyright 2012 by ChartIQ LLC
 // -------------------------------------------------------------------------------------------
 
@@ -133,9 +133,9 @@ STXStudies.prepareStudy=function(stx, study, sd){
 	}
 	if(study.overlay){
 		var overlay=stx.overlays[sd.name];
-		if(!overlay){
+		//if(!overlay){
 			stx.overlays[sd.name]=sd;
-		}
+		//}
 	}
 
 };
@@ -334,6 +334,22 @@ STXStudies.displayStudies=function(stx, quotes){
 			}
 		}
 	}
+};
+
+/*
+ * Convenience function for determining the min and max for a given data point
+ */
+STXStudies.calculateMinMaxForDataPoint=function(stx, name, quotes){
+	var min=2000000000;
+	var max=-2000000000;
+	for(var i=0;i<quotes.length;i++){
+		var m=quotes[i][name];
+		if(typeof m=="undefined" || m==null) continue;
+		if(isNaN(m)) continue;
+		min=Math.min(m,min);
+		max=Math.max(m,max);
+	}
+	return {"min":min,"max":max};
 };
 
 STXStudies.determineMinMax=function(stx, sd, quotes){
@@ -571,10 +587,24 @@ STXStudies.displayMACD=function(stx, sd, quotes) {
 	STXStudies.displaySeriesAsLine(stx, sd, quotes);
 };
 
-STXStudies.displayPSAR=function(stx, sd, x, quotes){
-	var x0=stx.computePosition(x, 0);
-	var y0=stx.pixelFromPrice(quotes[x]["Result " + sd.name]);
-	stx.plotLine(x0, x0+3, y0, y0, sd.outputs["Result"], "segment", stx.chart.context, true, {});
+STXStudies.displayPSAR2=function(stx, sd, quotes){
+	stx.startClip(sd.panel);
+	stx.chart.context.beginPath();
+	for(var x=0;x<quotes.length;x++){
+		var x0=stx.computePosition(x, 0);
+		var y0=stx.pixelFromPrice(quotes[x]["Result " + sd.name]);
+		stx.chart.context.moveTo(x0,y0);
+		stx.chart.context.lineTo(x0+3, y0);
+		//stx.plotLine(x0, x0+3, y0, y0, sd.outputs["Result"], "segment", stx.chart.context, true, {});
+	}
+	stx.chart.context.lineWidth=1;
+	if(sd.highlight) stx.chart.context.lineWidth=3;
+	var color=sd.outputs["Result"];
+	if(color=="auto") color=stx.defaultColor;	// This is calculated and set by the kernel before draw operation.
+	stx.chart.context.strokeStyle=color;
+	stx.chart.context.stroke();
+	stx.chart.context.closePath();
+	stx.endClip();
 };
 
 // Centered will center the histogram on the panel, otherwise the histogram is centered on the zero axis
@@ -894,7 +924,7 @@ STXStudies.studyLibrary={
 			"overlay": true,
 			"seriesFN": null,
 			"calculateFN": STXStudies.passToModulus,
-			"tickFN": STXStudies.displayPSAR,
+			"seriesFN": STXStudies.displayPSAR2,
 			"inputs": {"Minimum AF":.02,"Maximum AF":.2}
 		},
 		"Klinger": {

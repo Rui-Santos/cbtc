@@ -1,4 +1,4 @@
-// -------------------------------------------------------------------------------------------
+﻿// -------------------------------------------------------------------------------------------
 // Copyright 2012 by ChartIQ LLC
 // -------------------------------------------------------------------------------------------
 
@@ -10,15 +10,19 @@ STXChart.vectorStartY=0;
 STXChart.vectorEndX=0;
 STXChart.vectorEndY=0;
 STXChart.vectorType="";		// The type of drawing currently enabled "segment", "line", "ray", etc. See sample.html menu
-STXChart.vectorDescriptor=null;	// The descriptor for the current drawing tool. Used primarily for extension of drawing capabilities.
 STXChart.crosshairX=0;	// Current X screen coordinate of the crosshair
 STXChart.crosshairY=0;
 STXChart.insideChart=false;	// Toggles to true whenever the mouse cursor is within the chart. Only works with a single chart with mouse events managed at the document level.
-STXChart.currentColor="#D73C28";	// Currently selected color for drawing tools. This may be changed by developing a menu with a color picker.
-STXChart.currentFill="#D73C28";	// Currently selected fill for drawing shapes. This may be changed by developing a menu with a color picker.
-STXChart.drawingDescriptors={};	// Library of currently registered drawing tools. Will be empty for standard tools.
+STXChart.currentColor="auto";	// Currently selected color for drawing tools. This may be changed by developing a menu with a color picker.
+STXChart.drawingTools={};
 STXChart.version="09-2013";
-STXChart.currentVectorParameters={};
+STXChart.useAnimation=false;	// Set to true to force use of HTML5 canvas animation API
+STXChart.ipadMaxTicks=1500;		// performance limitation as of IOS7
+STXChart.currentVectorParameters={
+		pattern:"solid",
+		lineWidth:1,
+		fillColor:"#7DA6F5"
+};
 STXChart.defaultDisplayTimeZone=null;	// If set, then new STXChart objects will pull their display timezone from this
 
 if(typeof $$=="undefined"){
@@ -71,8 +75,10 @@ function STXChart(container){
 	this.manageTouchAndMouse=false;	// If true then the STXChart object will manage it's own touch and mouse events, by attaching them to the container div
 	this.touches=[];
 	this.changedTouched=[];
+	this.crosshairTick=null;
+	this.crosshairValue=null;
 	this.yaxisWidth=40;
-
+	
 	this.pt={
 		x1:-1,
 		x2:-1,
@@ -115,7 +121,8 @@ function STXChart(container){
 		panels: {}
 	};
 	this.preferences={
-		magnet: false
+		magnet: false,
+		whitespace: 100	// Initial whitespace on right of the screen in pixels
 	};
 	this.translationCallback=null;	// fc(english) should return a translated phrase given the English phrase. See separate translation file for list of phrases.
 	this.locale=null;			// set this to the locale string to use when localizing charts. locale string should reference a loaded ECMA-402 Intl locale. Leaving null will use the default browser locale. Or call stx.setLocale(locale) to change the locale dynamically.
@@ -129,6 +136,7 @@ function STXChart(container){
 	this.intradayDataCallback=null; // deprecated
 	this.dataCallback=null;	// Used by setPeriodicityV2 which will call this if an interval is requested that it does not have
 	this.dontRoll=false;	// Set this to true if server data comes as week or monthly and doesn't require rolling computation from daily
+	this.drawingObjects=[];	// Drawing objects on the chart
 	this.chart={
 			canvas: null,	// Contains the HTML5 canvas with the chart and drawings
 			tempCanvas: null,	// lays on top of the canvas and is used when creating drawings
@@ -168,7 +176,7 @@ function STXChart(container){
 				vectors: [],
 				projection: []
 			},
-			hiddenVectors: null,	// Used internally to hide drawings
+			hideDrawings: false,	// Set to true to hide drawings
 			volumeMax: 0,			// Contains the maximum volume displayed if a vchart is enabled
 			decimalPlaces: 2,		// Maximum number of decimal places in data set. Computed automatically.
 			roundit: 100,			// Computed automatically to round y-axis display
@@ -177,15 +185,19 @@ function STXChart(container){
 			beginMinute:0,
 			endHour:23,
 			endMinute:59,
-			minutesInSession:1440	// Auto calculated
+			minutesInSession:1440,	// Auto calculated
+			calendarAxis: false,		// If true then axis will be calendar time, ignoring weekends, holidays and closing hours
+			allowScrollPast: true		// If true then allow users to scroll back in time so that chart can be right aligned
 		};
 	this.styles={};					// Contains CSS styles used internally to render canvas elements
 }
 
 STXChart.DrawingDescriptor={
 		"name": "",
-		"render": null, /// function vector, color, context, highlight (boolean), temporary (boolean)
-		"intersected": null	/// function vector, x, y, returns whether coordinates intersect the object
+		"render": null, /// function(vector, color, context, highlight (boolean), temporary (boolean), stx)
+		"intersected": null,	/// function(vector, x, y) returns whether coordinates intersect the object
+		"click": null,	/// function(vector, clickNumber) called when mouse click or tap. Return true to end drawing. False to accept more clicks.
+		"abort": null	/// called when user has aborted drawing action (esc key for instance)
 };
 
 STXChart.prototype.prepend=function(o,n){
@@ -193,6 +205,10 @@ STXChart.prototype.prepend=function(o,n){
 };
 STXChart.prototype.append=function(o,n){
 	STXChart.prototype["append"+o]=n;
+};
+STXChart.prototype.remove=function(o){
+	delete STXChart.prototype["append"+o];
+	delete STXChart.prototype["prepend"+o];
 };
 STXChart.registeredContainers=[];	// This will contain an array of all of the STX container objects
 // Note that if you are dynamically destroying containers in the DOM you should delete them from this array when you do so
@@ -292,7 +308,7 @@ STXChart.prototype.setPeriodicity=function(period, interval){
   example setPeriodicityV2(7, 3);	// draw a 21 minute chart, assuming setMasterData has 3 minute values
 STXChart.prototype.setPeriodicityV2=function(period, interval){
 
- This method is called with each drawing operation to draw the vectors (drawings) on the screen. It will automatically adjust the dimensions of drawings if the user switches from adjusted to nominal prices (on daily charts). If this.chart.hiddenVectors is set to true then this method will be bypassed (so as to implement a "hide drawings" user interface function if desired).
+ This method is called with each drawing operation to draw the vectors (drawings) on the screen. It will automatically adjust the dimensions of drawings if the user switches from adjusted to nominal prices (on daily charts). If this.chart.hideDrawings is set to true then this method will be bypassed (so as to implement a "hide drawings" user interface function if desired).
 STXChart.prototype.drawVectors=function(){
  
  

@@ -2,7 +2,7 @@
 if (typeof window !== 'undefined')
     window.OldIntl = window.Intl;
 
-var Intl = /*window.Intl || */(function (Intl) {
+var Intl = window.Intl || (function (Intl) {
 
 /**
  * @license Copyright 2013 Andy Earnshaw, MIT License

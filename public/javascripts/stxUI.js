@@ -19,6 +19,10 @@ STXMenuManager=function(){};
 STXMenuManager.registeredCharts=[];
 STXMenuManager.openMenu=null;
 STXMenuManager.useOverlay=true;
+STXMenuManager.menusDisabled=false;	// Set to true for instance when opening a dialog
+STXMenuManager.onClass=null;
+STXMenuManager.offClass=null;
+STXMenuManager.menus=[];
 
 STXMenuManager.registerChart=function(stx){
 	STXMenuManager.registeredCharts.push(stx);
@@ -35,6 +39,14 @@ STXMenuManager.useOverlays=function(useOverlay){
 	STXMenuManager.useOverlay=useOverlay;
 };
 
+STXMenuManager.cancelSingleClick=function(){
+	if(STXTouchAction=="ontouchend"){
+		for(var i=0;i<STXMenuManager.registeredCharts.length;i++){
+			STXMenuManager.registeredCharts[i].cancelTouchSingleClick=true;
+		}
+	}
+};
+
 /* Turns on the menu manager. Pass a callback for when the user taps outside of the menu. The callback function will receive the name.
  * name should be unique for each menu on the page, so that clicking one menu will close an already open menu
  */
@@ -43,10 +55,6 @@ STXMenuManager.menuOn=function(name, callback){
 		return function(e){
 			STXMenuManager.menuOff();
 			callback(name);
-			for(var i=0;i<STXChart.registeredContainers.length;i++){
-				var stx=STXChart.registeredContainers[i].stx;
-				stx.cancelTouchSingleClick=true;
-			}
 		};
 	}
 	if(STXMenuManager.registeredCharts.length==0) return;
@@ -72,13 +80,16 @@ STXMenuManager.menuOff=function(){
 		STXMenuManager.bodyOverlay.style.display="none";
 		STXMenuManager.bodyOverlay[STXTouchAction]=null;
 	}
-	for(var i=0;i<STXMenuManager.registeredCharts.length;i++){
-		STXMenuManager.registeredCharts[i].openDialog="";
+	this.cancelSingleClick();
+	if(STXDialogManager.stack.length==0){
+		for(var i=0;i<STXMenuManager.registeredCharts.length;i++){
+			STXMenuManager.registeredCharts[i].openDialog="";
+		}
 	}
 };
 
 STXMenuManager.makeMenus=function(){
-	function toggle(div){
+	function toggle(div, menu){
 		return function(e){
 			function turnMeOff(div){
 				return function(){
@@ -92,9 +103,10 @@ STXMenuManager.makeMenus=function(){
 				dom=dom.parentNode;
 			}while(dom);
 			if(div.style.display=="none"){
-				div.style.display="block";
 				var menuName=uniqueID();
+				if(STXMenuManager.menusDisabled && !menu.alwaysOn) return;
 				STXMenuManager.menuOn(menuName, turnMeOff(div));
+				div.style.display="block";
 			}else{
 				STXMenuManager.menuOff();
 				div.style.display="none";
@@ -105,16 +117,17 @@ STXMenuManager.makeMenus=function(){
 		return function(e){
 			STXMenuManager.menuOff();
 			menuOutline.style.display="none";
-			if(priorClick) priorClick();
+			//if(priorClick) priorClick();
 			var action=clickable.getAttribute("stxToggle");
 			eval(action);
 		};
 	}
-	var menus=document.querySelectorAll(".stxMenu");
-	for(var i=0;i<menus.length;i++){
-		var menu=menus[i];
+	STXMenuManager.menus=document.querySelectorAll(".stxMenu");
+	for(var i=0;i<STXMenuManager.menus.length;i++){
+		var menu=STXMenuManager.menus[i];
 		var menuOutline=menu.querySelectorAll(".menuOutline")[0];
-		menu[STXTouchAction]=toggle(menuOutline);
+		menu.alwaysOn=(menu.className.indexOf("stxAlwaysOn")!=-1);
+		menu[STXTouchAction]=toggle(menuOutline, menu);
 		
 		var clickables=menuOutline.querySelectorAll("*[stxToggle]");
 		for(var j=0;j<clickables.length;j++){
@@ -122,6 +135,23 @@ STXMenuManager.makeMenus=function(){
 		}
 	}
 };
+
+STXMenuManager.disableMenus=function(){
+	STXMenuManager.menusDisabled=true;
+	for(var i=0;i<STXMenuManager.menus.length;i++){
+		var menu=STXMenuManager.menus[i];
+		if(STXMenuManager.onClass) unappendClassName(menu, STXMenuManager.onClass);
+		if(STXMenuManager.offClass) appendClassName(menu, STXMenuManager.offClass);
+	}
+};
+
+STXMenuManager.enableMenus=function(){
+	STXMenuManager.menusDisabled=false;
+	for(var i=0;i<STXMenuManager.menus.length;i++){
+		var menu=STXMenuManager.menus[i];
+		if(STXMenuManager.offClass) unappendClassName(menu, STXMenuManager.offClass);
+		if(STXMenuManager.onClass) appendClassName(menu, STXMenuManager.onClass);
+	}};
 
 /*
  * Close the menu of a containing object.
@@ -183,6 +213,7 @@ STXDialogManager.useOverlay=false;
 STXDialogManager.stack=[];
 
 STXDialogManager.modalBegin=function(){
+	STXMenuManager.menusDisabled=true;
 	for(var i=0;i<STXChart.registeredContainers.length;i++){
 		var stx=STXChart.registeredContainers[i].stx;
 		stx.openDialog="modal";
@@ -191,6 +222,7 @@ STXDialogManager.modalBegin=function(){
 };
 
 STXDialogManager.modalEnd=function(){
+	STXMenuManager.menusDisabled=false;
 	for(var i=0;i<STXChart.registeredContainers.length;i++){
 		var stx=STXChart.registeredContainers[i].stx;
 		stx.cancelTouchSingleClick=true;
@@ -218,7 +250,7 @@ STXDialogManager.dismissDialog=function(){
 	node.style.display="none";
 	if(STXDialogManager.colorPickerDiv!=null) STXDialogManager.colorPickerDiv.style.display="none";
 	
-	if(STXDialogManager.length==0){
+	if(STXDialogManager.stack.length==0){
 		if(STXDialogManager.bodyOverlay && STXDialogManager.bodyOverlay.style.display=="block"){
 			STXDialogManager.bodyOverlay.style.display="none";
 		}
@@ -284,9 +316,12 @@ STXThemeManager.populateDialog=function(id, stx){
 		};
 	}
 	$$$("#candleBordersOn",$$(id)).checked=false;
-	$$$("#candleBordersOn",$$(id))[STXTouchAction]=toggleBorders;
+	$$$("#candleBordersOn",$$(id)).onclick=toggleBorders;
 	
-	var computed=getComputedStyle(stx.chart.container);
+	var computed="#FFFFFF";
+	if(stx.chart.container){
+		computed=getComputedStyle(stx.chart.container);
+	}
 	for(var className in STXThemeManager.classMapping){
 		var mapping=STXThemeManager.classMapping[className];
 		var color=null;
@@ -299,6 +334,7 @@ STXThemeManager.populateDialog=function(id, stx){
 			borderColor=style["border-left-color"];
 		}else{
 			color=computed[className];
+			if(STX.isTransparent(color) && className=="backgroundColor") color=stx.containerColor;
 		}
 		
 		var picker=$$(id).querySelectorAll(".color." + className)[0];
@@ -338,7 +374,8 @@ STXThemeManager.createTheme=function(stx){
 				theme[className]["border-left-color"]="transparent";
 			}
 		}else{
-			theme[className]=stx.chart.container.style[className];
+			if(stx.chart.container)
+				theme[className]=stx.chart.container.style[className];
 		}
 	}
 	return theme;
@@ -422,7 +459,7 @@ STXThemeManager.loadBuiltInTheme=function(stx, theme, cb){
 	lnk.rel="stylesheet";
 	lnk.type="text/css";
 	lnk.media="screen";
-	lnk.href=STXThemeManager.builtInThemes[theme];
+	lnk.href="css/" + STXThemeManager.builtInThemes[theme];
 	linkContainer.insertBefore(lnk, lastLink.nextSibling);
 	STXThemeManager.baseThemeEL=lnk;
 	lnk.onload=function(){
@@ -578,7 +615,14 @@ STXLookupWidget.prototype.init=function(){
 			e.stopPropagation? e.stopPropagation() : e.cancelBubble = true;			
 		};
 	}
+	function closure2(that){
+		return function(e){
+			var div=getEventDOM(e);
+			that.config.textCallback(that, div.value, that.currentFilter);
+		};
+	}
 	this.config.input.onkeyup=closure(this);
+	this.config.input.onclick=closure2(this);
 };
 
 STXLookupWidget.prototype.display=function(){
@@ -734,13 +778,14 @@ STXTimeZoneWidget.populateDialog=function(id){
 		var zone=arr[i];
 		var li=template.cloneNode(true);
 		li.style.display="block";
-		li.onmousedown=STXScrollManager.start;
 		li.innerHTML=zone;
-		li.onmouseup=setTimezone(zone);
+		li.onmousedown=STXScrollManager.start;
+		li.ontouchstart=STXScrollManager.start;
+		li.onclick=setTimezone(zone);
 		ul.appendChild(li);
 	}
 	if(!STXTimeZoneWidget.iscroll){
-		STXTimeZoneWidget.iscroll = new iScroll("timezoneDialogWrapper", {vScrollbar: true, hScroll:false, hideScrollbar: false});
+		STXTimeZoneWidget.iscroll = new iScroll("timezoneDialogWrapper", {vScrollbar: true, hScroll:false, hideScrollbar: false, vScroll:true});
 	}else{
 		STXTimeZoneWidget.iscroll.refresh();
 	}
@@ -788,28 +833,40 @@ STXDrawingToolbar=function(){};
 STXDrawingToolbar.initialize=function(){
 	function setLineColor(){
 		return function(color){
-			STXChart.currentColor="#" + color;			
+			if(color=="000000" || color=="ffffff") STXChart.currentColor="auto";
+			else STXChart.currentColor="#" + color;			
 		};
 	}
 	function setFillColor(){
 		return function(color){
-			STXChart.currentFill="#" + color;			
+			STXChart.currentVectorParameters.fillColor="#" + color;			
 		};
 	}
 	var toolbar=$$$(".stx-toolbar");
 	var lineColorPicker=$$$(".stxLineColorPicker", toolbar);
 	var fillColorPicker=$$$(".stxFillColorPicker", toolbar);
 	STXChart.currentColor=lineColorPicker.style.backgroundColor;		
-	STXChart.currentFill=fillColorPicker.style.backgroundColor;		
+	STXChart.currentVectorParameters.fillColor=fillColorPicker.style.backgroundColor;
 	
 	STXMenuManager.attachColorPicker(lineColorPicker, toolbar, setLineColor());
 	STXMenuManager.attachColorPicker(fillColorPicker, toolbar, setFillColor());
 };
 
+STXDrawingToolbar.setLineColor=function(stx){
+	var toolbar=$$$(".stx-toolbar");
+	var lineColorPicker=$$$(".stxLineColorPicker", toolbar);
+	if(STXChart.currentColor=="transparent"){
+		lineColorPicker.style.backgroundColor=stx.defaultColor;
+	}else{
+		lineColorPicker.style.backgroundColor=STXChart.currentColor;
+	}
+};
+
 STXDrawingToolbar.configurator={
-		".stxToolbarFill":{"line":false, "ray":false, "segment":false, "annotation": false, "horizontal":false, "fib retrace":false},
+		".stxToolbarFill":{"line":false, "ray":false, "segment":false, "annotation": false, "horizontal":false, "fibonacci":false},
 		".stxToolbarLine":{},
-		".stxToolbarNone":{"line":false, "ray":false, "segment":false, "annotation": false, "horizontal":false, "fib retrace":false},
+		".stxToolbarLinePicker":{"fibonacci": false, "annotation": false},
+		".stxToolbarNone":{"line":false, "ray":false, "segment":false, "annotation": false, "horizontal":false, "fibonacci":false},
 		".stxToolbarDotted":{},
 		".stxToolbarDashed":{}
 };
@@ -825,7 +882,7 @@ STXDrawingToolbar.setLine=function(width, pattern){
 		className+=" style2";
 	}else if(pattern=="dashed"){
 		STXChart.currentVectorParameters.pattern="dashed";
-		className+=" style2";
+		className+=" style3";
 	}else if(pattern=="none"){
 		STXChart.currentVectorParameters.pattern="none";
 	}
@@ -842,7 +899,7 @@ STXDrawingToolbar.setVectorType=function(stx,vectorType){
 				all[j].style.display="none";
 			}
 		}
-		$$("toolSelection").innerHTML="Select Tool";
+		$$("toolSelection").innerHTML=STXI18N.translate("Select Tool");
 		return;
 	}
 	for(var i in STXDrawingToolbar.configurator){
@@ -856,17 +913,18 @@ STXDrawingToolbar.setVectorType=function(stx,vectorType){
 		}
 	}
 	stx.changeVectorType(vectorType);
-	var prettyDisplay=vectorType.capitalize();
+	var prettyDisplay=STXI18N.translate(vectorType.capitalize());
 	$$("toolSelection").innerHTML=prettyDisplay;
+	STXDrawingToolbar.setLineColor(stx);
 };
 
 STXDrawingToolbar.crosshairs=function(stx, state){
 	STXDrawingToolbar.setVectorType(stx, null);
 	stx.layout.crosshair=state;
 	if(state){
-		$$("toolSelection").innerHTML="Crosshairs";
+		$$("toolSelection").innerHTML=STXI18N.translate("Crosshairs");
 	}else{
-		$$("toolSelection").innerHTML="Select Tool";		
+		$$("toolSelection").innerHTML=STXI18N.translate("Select Tool");		
 	}
 	stx.draw();
 	stx.changeOccurred("layout");

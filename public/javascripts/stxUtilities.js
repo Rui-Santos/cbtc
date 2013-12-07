@@ -1,4 +1,4 @@
-// -------------------------------------------------------------------------------------------
+﻿// -------------------------------------------------------------------------------------------
 // Copyright 2012 by ChartIQ LLC
 // -------------------------------------------------------------------------------------------
 
@@ -17,7 +17,9 @@ STX.isAndroid = navigator.userAgent.toLowerCase().indexOf("android") > -1;
 STX.isIE = navigator.userAgent.toLowerCase().indexOf("msie") > -1;
 STX.isIE9 = navigator.userAgent.indexOf("Trident/5") > -1;
 STX.isIE8 = false;
+STX.isIOS7 = navigator.userAgent.match(/iPad;.*CPU.*OS 7_\d/i);
 STX.isSurfaceApp = window.MSApp;
+STX.noKeyboard = STX.ipad || STX.iphone || STX.isAndroid || STX.isSurfaceApp;
 
 STX.openDebugger=function(){
 	var w=window.open("", "Debug", "width=500, height=400, scrollbars=1");
@@ -68,6 +70,7 @@ STX.colorToHex=function(color) {
 };
 
 STX.isTransparent=function(color){
+	if(!color) return false;
 	if(color=="transparent") return true;
 	var digits=/(.*?)rgba\((\d+), (\d+), (\d+), (.*)\)/.exec(color);
 	if(digits==null) return false;
@@ -145,7 +148,11 @@ function getEventDOM(e){
 }
 
 function getHostName(url) {
-   return url.match(/:\/\/(.[^/]+)/)[1];
+	try{
+		return url.match(/:\/\/(.[^/]+)/)[1];
+	}catch(e){
+		return "";
+	}
 }
 
 String.prototype.capitalize = function() {
@@ -221,23 +228,30 @@ STX.timeAsDisplay=function(dt, stx){
 // will be available when Intl
 // becomes a browser standard, otherwise this method or the locale will need to
 // be modified for those or other special cases
-STX.createMonthArrays=function(stx, formatter){
+STX.createMonthArrays=function(stx, formatter, locale){
 	stx.monthAbv=[];
 	stx.monthLetters=[];
 	var dt=new Date();
+	var shortenMonth=true;
+	if(STXI18N.longMonths && STXI18N.longMonths[locale]) shortenMonth=false;
 	for(var i=0;i<12;i++){
 		dt.setDate(1);
 		dt.setMonth(i);
 		var str=formatter.format(dt);
-		var month="";
-		for(var j=0;j<str.length;j++){
-			var c=str.charAt(j);
-			var cc=c.charCodeAt(0);
-			if(cc<65) continue;
-			month+=c;
+		if(shortenMonth){
+			var month="";
+			for(var j=0;j<str.length;j++){
+				var c=str.charAt(j);
+				var cc=c.charCodeAt(0);
+				if(cc<65) continue;
+				month+=c;
+			}
+			stx.monthAbv[i]=month;
+			stx.monthLetters[i]=month[0];
+		}else{
+			stx.monthAbv[i]=str;
+			stx.monthLetters[i]=str;
 		}
-		stx.monthAbv[i]=month;
-		stx.monthLetters[i]=month[0];
 	}
 };
 
@@ -283,7 +297,7 @@ function linesIntersect(x1, x2, y1, y2, x3, x4, y3, y4, type){
 	var mub = numerb / denom;
 	if(type=="segment" || type=="zig zag"){
 		if (mua>=0 && mua<=1 && mub>=0 && mub<=1) return true;
-	}else if(type=="line"){
+	}else if(type=="line" || type=="horizontal" || type=="vertical"){
 		if (mua>=0 && mua<=1) return true;
 	}else if(type=="ray"){
 		if (mua>=0 && mua<=1 && mub>=0) return true;
@@ -465,16 +479,20 @@ function getETDateTime(){
 	var localOffset = d.getTimezoneOffset() * 60000;
 	var utc = localTime + localOffset;
 	var offset = -4;
-	if((d.getMonth()<2 || (d.getMonth==2 && d.getDate()<11)) || (d.getMonth>10 || (d.getMonth==10 && d.getDate()>=4)))
+	if((d.getMonth()<2 || (d.getMonth()==2 && d.getDate()<11)) || (d.getMonth()>10 || (d.getMonth()==10 && d.getDate()>=4)))
 			offset = -5;
 	var est = utc + (3600000*offset);
 	var nd = new Date(est);
 	return nd;
 }
 
-function getAjaxServer(){
+function getAjaxServer(url){
 	var server=false;
-	if(STX.isIE9){
+	var crossDomain=true;
+	if(STX.isIE9 && url){
+		if(getHostName(url)=="") crossDomain=false;
+	}
+	if(STX.isIE9 && crossDomain){
 		server = new XDomainRequest();
 		return server;
 	}
@@ -690,6 +708,16 @@ STX.horizontalIntersect=function(vector, x, y){
 	return false;
 }
 
+STX.twoPointIntersect=function(vector, x, y, radius){
+	return boxIntersects(x-radius, y-radius, x+radius, y+radius, vector.x0, vector.y0, vector.x1, vector.y1, "segment");
+};
+
+STX.boxedIntersect=function(vector, x, y){
+	if(x>Math.max(vector.x0, vector.x1) || x<Math.min(vector.x0, vector.x1)) return false;
+	if(y>Math.max(vector.y0, vector.y1) || y<Math.min(vector.y0, vector.y1)) return false;
+	return true;
+}
+
 STX.isInElement=function(div, x, y){
 	if(x<div.offsetLeft) return false;
 	if(x>div.offsetLeft+div.clientWidth) return false;
@@ -833,7 +861,7 @@ STX.Plotter.prototype={
 		},
 		lineTo: function(name, x, y){
 			var series=this.seriesMap[name];
-			series.moves.push({"action":"lineTo","x":x,"y":y});			
+			series.moves.push({"action":"lineTo","x":x,"y":y});
 		},
 		quadraticCurveTo: function(name, x0, y0, x1, y1){
 			var series=this.seriesMap[name];
@@ -1094,7 +1122,7 @@ STX.readablePeriodicity=function(stx){
 // To prevent browser caching, a timestamp is added to every query.
 // This function supports cross origin ajax on IE9
 function postAjax(url, payload, cb, contentType){
-	var server=getAjaxServer();
+	var server=getAjaxServer(url);
 	if(!server) return false;
 	var epoch=new Date();
 	if(url.indexOf('?')==-1) url+="?" + epoch.getTime();
@@ -1179,6 +1207,32 @@ STX.newChild=function(div, tagName, className){
 	if(className) div2.className=className;
 	div.appendChild(div2);
 	return div2;
+};
+
+STX.androidDoubleTouch=null;
+STX.clickTouch=function(div, fc){
+	// Annoyingly, Android default browser sometimes registers onClick events twice, so we ignore any that occur
+	// within a half second
+	function closure(div, fc){
+		return function(e){
+			if(STX.androidDoubleTouch==null){
+				STX.androidDoubleTouch=new Date().getTime();
+			}else{
+				if(new Date().getTime()-STX.androidDoubleTouch<500) return;
+				STX.androidDoubleTouch=new Date().getTime();
+			}
+			(fc)(e);
+		};
+	}
+	if(STX.ipad || STX.iphone){
+		div.ontouchend=fc;
+	}else{
+		if(STX.isAndroid){
+			div.onclick=closure(div, fc);			
+		}else{
+			div.onclick=fc;
+		}
+	}
 };
 
 if(typeof exports!="undefined") exports.STX=STX;

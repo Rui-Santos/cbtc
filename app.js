@@ -269,6 +269,7 @@ var MinuteBarSchema = mongoose.Schema({
 var MinuteBar = mongoose.model('MinuteBar', MinuteBarSchema);
 
 var calculateNewMinuteBar = function (currentTime, timeBack) {
+  console.log("inside minbar");
   var addZero = function(dateObject) {
     if (dateObject.toString().length === 1) {
       return "0" + dateObject ;
@@ -331,6 +332,7 @@ var calculateNewMinuteBar = function (currentTime, timeBack) {
 };
 
 var runMinuteBarCalc = function () {
+  console.log("inside run minbar");
   setInterval(function() {
     var date = new Date();
     var time = 60 * 1000;
@@ -412,7 +414,7 @@ var start_app = function (Trade) {
   // http.createServer(app).listen(app.get('port'), function(){
   //   console.log('Express server listening on port ' + app.get('port'));
   // });
-
+  console.log("end of app");
   runMinuteBarCalc();
 
 };

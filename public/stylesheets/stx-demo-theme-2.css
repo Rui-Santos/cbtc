@@ -1,6 +1,7 @@
 @charset "UTF-8";
 /* CSS Document */
 
+/* This is a simple sample theme file - detailed information on specific elements see default stylesheet */
 
 /* -------------------------------------------------------- NAV BAR -------------------------------------------------------- */
 
@@ -29,8 +30,8 @@
 .stx-toolbar div.btn.menu > em {border-left:1px dotted #999;}
 .stx-toolbar div.btn.menu:hover > em {border-left:1px dotted #999;}
 
-.stx-drawing .color {border: 5px solid #111111;}
-.stx-drawing span.stx-line {border-top:1px solid #efefef;}
+.stx-drawing .color {outline: 1px solid rgba(255,255,255,.2);}
+.stx-drawing span.stx-line {border-color: #efefef;}
 
 .huLabel {color: #999;}
 .huField {color: #efefef;}
@@ -45,6 +46,11 @@
 
 #iconsTitle {
 	background-color:#7e7e7e;
+	color:white;
+}
+
+.stx-footer {
+	background:#000000;
 	color:white;
 }
 

@@ -1,22 +1,38 @@
-// -------------------------------------------------------------------------------------------
+﻿// -------------------------------------------------------------------------------------------
 // Copyright 2012 by ChartIQ LLC
 // -------------------------------------------------------------------------------------------
 
 function STXMarket(){
 }
 
-STXMarket.isMarketDay=function(symbol){
-	var nd=getETDateTime();
-	if(nd.getDay()==0) return false;
-	if(nd.getDay()==6) return false;
+// Override this depending on your market data!!!
+STXMarket.isForexFuturesSymbol=function(symbol){
+	if(!symbol) return false;
+	if(symbol.length>=6) return true;
+	return false;
+};
+
+STXMarket.isMarketDay=function(symbol, nd){
+	if(!nd) nd=getETDateTime();
+	if(!STXMarket.isForexFuturesSymbol(symbol)){
+		if(nd.getDay()==6) return false;
+	}else{
+		if(nd.getDay()==0) return false;
+		if(nd.getDay()==6) return false;
+	}
 	if(STXMarket.isHoliday(nd, symbol)) return false;
 	return true;
 };
 
-STXMarket.isMarketOpen=function(symbol){
+STXMarket.isMarketOpen=function(symbol, stx){
 	if(!STXMarket.isMarketDay(symbol)) return false;
 	var nd=getETDateTime();
-	if((nd.getHours()>9 || (nd.getHours()==9 && nd.getMinutes()>29)) && (nd.getHours()<16 || (nd.getHours()==16 && nd.getMinutes()<5))) return true;
+	if(!stx){
+		if((nd.getHours()>9 || (nd.getHours()==9 && nd.getMinutes()>29)) && (nd.getHours()<16 || (nd.getHours()==16 && nd.getMinutes()<5))) return true;
+	}else{
+		if((nd.getHours()>stx.chart.beginHour || (nd.getHours()==stx.chart.beginHour && nd.getMinutes()>stx.chart.beginMinnute))
+		&& (nd.getHours()<stx.chart.endHour || (nd.getHours()==stx.chart.endHour && nd.getMinutes()<stx.chart.endMinute+5))) return true;
+	}
 	return false;
 };
 
@@ -34,8 +50,8 @@ STXMarket.isAfterDelayed=function(symbol){
 	return false;
 };
 
-STXMarket.isForexOpen=function(){
-	var nd=getETDateTime();
+STXMarket.isForexOpen=function(nd){
+	if(!nd) nd=getETDateTime();
 	if(nd.getDay()==6) return false;
 	if(nd.getDay()==5 && nd.getHours()>=18) return false;
 	if(nd.getDay()==0 && nd.getHours()<15) return false;
@@ -126,18 +142,20 @@ STXMarket.nextDay=function(dt, inc, stx){
 	var dt2=new Date(dt.getTime());
 	for(var i=0;i<inc;i++){
 		dt2=STXMarket.incDate(dt2);
-		if(stx.chart.beginHour==0){	// forex. Note that the time is not accurate if the date lands on a Sunday
-			if(dt2.getDay()==6) dt=STXMarket.incDate(dt2);
-			if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt=STXMarket.incDate(dt2);
-			if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt=STXMarket.incDate(dt2);
-			if(dt2.getDay()==6) dt=STXMarket.incDate(dt2);
-		}else{
-			if(dt2.getDay()==0) dt=STXMarket.incDate(dt2);
-			if(dt2.getDay()==6) dt=STXMarket.incDate(dt2,2);
-			if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt=STXMarket.incDate(dt2);
-			if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt=STXMarket.incDate(dt2);
-			if(dt2.getDay()==0) dt=STXMarket.incDate(dt2);
-			if(dt2.getDay()==6) dt=STXMarket.incDate(dt2,2);
+		if(!stx.calendarAxis){
+			if(stx.chart.beginHour==0){	// forex. Note that the time is not accurate if the date lands on a Sunday
+				if(dt2.getDay()==6) dt=STXMarket.incDate(dt2);
+				if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt=STXMarket.incDate(dt2);
+				if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt=STXMarket.incDate(dt2);
+				if(dt2.getDay()==6) dt=STXMarket.incDate(dt2);
+			}else{
+				if(dt2.getDay()==0) dt=STXMarket.incDate(dt2);
+				if(dt2.getDay()==6) dt=STXMarket.incDate(dt2,2);
+				if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt=STXMarket.incDate(dt2);
+				if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt=STXMarket.incDate(dt2);
+				if(dt2.getDay()==0) dt=STXMarket.incDate(dt2);
+				if(dt2.getDay()==6) dt=STXMarket.incDate(dt2,2);
+			}
 		}
 	}
 	return dt2;
@@ -148,16 +166,18 @@ STXMarket.prevDay=function(dt, inc, stx){
 	var dt2=new Date(dt.getTime());
 	for(var i=0;i<inc;i++){
 		dt2=STXMarket.decDate(dt2);
-		if(stx.chart.beginHour==0){	//forex. Note that the time is not accurate if the date lands on a Sunday
-			if(dt2.getDay()==6) dt2=STXMarket.decDate(dt2);
-			if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt2=STXMarket.decDate(dt2);
-			if(dt2.getDay()==6) dt2=STXMarket.decDate(dt2);
-		}else{
-			if(dt2.getDay()==6) dt2=STXMarket.decDate(dt2);
-			if(dt2.getDay()==0) dt2=STXMarket.decDate(dt2);
-			if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt2=STXMarket.decDate(dt2);
-			if(dt2.getDay()==6) dt2=STXMarket.decDate(dt2);
-			if(dt2.getDay()==0) dt2=STXMarket.decDate(dt2,2);
+		if(!stx.calendarAxis){
+			if(stx.chart.beginHour==0){	//forex. Note that the time is not accurate if the date lands on a Sunday
+				if(dt2.getDay()==6) dt2=STXMarket.decDate(dt2);
+				if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt2=STXMarket.decDate(dt2);
+				if(dt2.getDay()==6) dt2=STXMarket.decDate(dt2);
+			}else{
+				if(dt2.getDay()==6) dt2=STXMarket.decDate(dt2);
+				if(dt2.getDay()==0) dt2=STXMarket.decDate(dt2);
+				if(STXMarket.isHoliday(dt2, stx.chart.symbol)) dt2=STXMarket.decDate(dt2);
+				if(dt2.getDay()==6) dt2=STXMarket.decDate(dt2);
+				if(dt2.getDay()==0) dt2=STXMarket.decDate(dt2,2);
+			}
 		}
 	}
 	return dt2;
@@ -169,25 +189,29 @@ STXMarket.nextPeriod=function(dt, interval, inc, stx){
 	if(interval=="minute") multiplier=1;
 	t1+=inc*multiplier*60*1000;
 	var future=new Date(t1);
-	if(stx.chart.beginHour==0 && stx.chart.beginMinute==0){
-		if(dt.getDay()==5 && dt.getHours()>=18){
-			var fmorning=new Date(dt.getYear(), dt.getMonth(), dt.getDate(), 0, 0, 0, 0).getTime();
-			fmorning+=2 * 24 * 60 * 60 * 1000;
-			fmorning+=15 * 60 * 60 * 1000;	// Currencies open at Sunday 3:00pm
-			dt=new Date(fmorning);
-		}
-	}else{
-		var endHour=stx.chart.endHour;
-		if(STXMarket.isHalfDay(future)){	// Half day
-			endHour=13;
-		}
-		if(future.getHours()>endHour || (future.getHours()==endHour && future.getMinutes()>=stx.chart.endMinute) || future.getHours()==0){
-			dt=STXMarket.nextDay(dt, 1, stx);
-			dt.setHours(stx.chart.beginHour);
-			dt.setMinutes(stx.chart.beginMinute);
-			dt.setSeconds(0);
-			dt.setMilliseconds(0);
-			return dt;
+	if(!stx.calendarAxis){
+		if(stx.chart.beginHour==0 && stx.chart.beginMinute==0){
+			if(STXMarket.isForexFuturesSymbol(stx.chart.symbol)){
+				if(dt.getDay()==5 && dt.getHours()>=18){
+					var fmorning=new Date(dt.getYear(), dt.getMonth(), dt.getDate(), 0, 0, 0, 0).getTime();
+					fmorning+=2 * 24 * 60 * 60 * 1000;
+					fmorning+=15 * 60 * 60 * 1000;	// Currencies open at Sunday 3:00pm
+					dt=new Date(fmorning);
+				}
+			}
+		}else{
+			var endHour=stx.chart.endHour;
+			if(STXMarket.isHalfDay(future)){	// Half day
+				endHour=13;
+			}
+			if(future.getHours()>endHour || (future.getHours()==endHour && future.getMinutes()>=stx.chart.endMinute) || future.getHours()==0){
+				dt=STXMarket.nextDay(dt, 1, stx);
+				dt.setHours(stx.chart.beginHour);
+				dt.setMinutes(stx.chart.beginMinute);
+				dt.setSeconds(0);
+				dt.setMilliseconds(0);
+				return dt;
+			}
 		}
 	}
 	return future;
@@ -197,7 +221,7 @@ STXMarket.prevPeriod=function(dt, interval, inc, stx){
 	var multiplier=interval;
 	if(interval=="minute") multiplier=1;
 	var t1=dt.getTime();
-	if(stx.chart.beginHour==0 && dt.getDay()==0 && dt.getHours()<15){	// Forex. Skip from Sunday to Friday evening
+	if(!stx.calendarAxis && stx.chart.beginHour==0 && dt.getDay()==0 && dt.getHours()<15){	// Forex. Skip from Sunday to Friday evening
 		var fridayEvening=new Date(dt.getTime()-(2*24*60*60*1000));
 		fridayEvening.setHours(18);
 		fridayEvening.setMinutes(0);
@@ -208,17 +232,19 @@ STXMarket.prevPeriod=function(dt, interval, inc, stx){
 		t1-=inc*multiplier*60*1000;
 	}
 	var past=new Date(t1);
-	if(past.getHours()==stx.chart.beginHour && past.getMinutes()<stx.chart.beginMinute){
-		var dt2=STXMarket.prevDay(dt, 1, stx);
-		var endHour=stx.chart.endHour;
-		if(STXMarket.isHalfDay(dt2)){
-			endHour=13;	// Half day
+	if(!stx.calendarAxis){
+		if(past.getHours()==stx.chart.beginHour && past.getMinutes()<stx.chart.beginMinute){
+			var dt2=STXMarket.prevDay(dt, 1, stx);
+			var endHour=stx.chart.endHour;
+			if(STXMarket.isHalfDay(dt2)){
+				endHour=13;	// Half day
+			}
+			dt2.setHours(endHour);
+			dt2.setMinutes(stx.chart.endMinute);
+			dt2.setSeconds(0);
+			dt2.setMilliseconds(0);
+			return dt2;
 		}
-		dt2.setHours(endHour);
-		dt2.setMinutes(stx.chart.endMinute);
-		dt2.setSeconds(0);
-		dt2.setMilliseconds(0);
-		return dt2;
 	}
 	return past;
 };
@@ -322,4 +348,45 @@ STXMarket.isQuarterEnd=function(dt){
 	return false;
 };
 
+
+
 if(typeof exports!="undefined") exports.STXMarket=STXMarket;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
