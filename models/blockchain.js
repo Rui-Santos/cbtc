@@ -3,7 +3,7 @@ var Websocket = require('ws');
 var CreateNewTransaction = function (transaction_data, geo_cord_array, io) {
   var transaction_size = JSON.parse(transaction_data)["x"]["out"][0]["value"]/100000000;
   var transaction_data_array = [geo_cord_array[0], geo_cord_array[1], transaction_size];
-  console.log("transaction_data_array " + transaction_data_array);
+  // console.log("transaction_data_array " + transaction_data_array);
   io.sockets.emit('transactions', transaction_data_array);
 };
 

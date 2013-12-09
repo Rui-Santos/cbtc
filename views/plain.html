@@ -10,7 +10,7 @@
 <script type="text/javascript" src="javascripts/stxUtilities.js"></script>
 <script type="text/javascript" src="javascripts/stxMarket.js"></script>
 <script type="text/javascript" src="javascripts/stxStudies.js"></script>
-<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+<script src="http://localhost:8000/socket.io/socket.io.js"></script>
 </head>
 
 <body>
@@ -63,7 +63,7 @@
 <script type="text/javascript" charset="ISO-8859-1" src="javascripts/stxModulus.js"></script>
 <script type="text/javascript" charset="ISO-8859-1" src="javascripts/stxKernelOs.js"></script>
 
-<script type="text/javascript" src="/trades"></script>
+
 
 
 <!-- The Chart -->
@@ -165,7 +165,7 @@
         //         newTick.Date=yyyymmddhhmm(currentTick);
         // }
         // Inject the bar
-        console.log("hi");
+        // console.log("hi");
         newTick.Date = yyyymmddhhmm(strToDateTime(newTick.Date));
         stx.appendMasterData([newTick]); // Add the new data point to the chart
 
@@ -175,9 +175,35 @@
 
     displayChart();
 
-    var socket = io.connect('http://localhost:8080');
+    // tryig to load historical data
+    var loadHistoricalData = function(trade_data) {
 
-    var streamingData= [];
+      if (trade_data) {
+        for(var i = trade_data.length - 1; i >= 0; i--) {
+          if (trade_data[i] && trade_data[i].date) {
+            var minbar = trade_data[i];
+            var new_minbar = {
+              Date: minbar.date,
+              Open: minbar.open,
+              High: minbar.high,
+              Low: minbar.low,
+              Close: minbar.close
+            };
+            streamSimulation(new_minbar);
+            console.log("added new historical data point");
+            console.log(new_minbar);
+          }
+        }
+      } else {
+        console.log("trade data does not exist yet");
+      }
+    };
+
+    loadHistoricalData(trade_data);
+
+    var socket = io.connect('http://localhost:8000');
+
+    // var streamingData= [];
 
     socket.on('trades', function (minbar) {
     	// debugger;
@@ -190,14 +216,14 @@
     		Close: minbar.close
     	}
 
-      console.log(new_minbar)
+      // console.log(new_minbar)
 
-    	console.log("We got a trade!!! " + minbar);
+    	// console.log("We got a trade!!! " + minbar);
     	streamSimulation(new_minbar);
     });
 
     socket.on('transactions', function (geo){
-      console.log("GEOOOOO"+geo)
+      // console.log("GEOOOOO"+geo)
       update_chart(geo);
     });
 
@@ -207,7 +233,8 @@
 </script>
 
 
-
+<!-- fetches last 30 min of data -->
+<script type="text/javascript" src="/trades"></script>
 
 
 
@@ -243,7 +270,7 @@
 
   var update_chart = function (geo) {
       map.dataProvider.images = [];
-      console.log("geo2"+geo[2]);
+      // console.log("geo2"+geo[2]);
       var new_spot = {
         svgPath: targetSVG,
         zoomLevel:5,

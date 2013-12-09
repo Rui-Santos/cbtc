@@ -15,8 +15,8 @@ module.exports = function(mongoose, Trade, MinuteBar) {
     var lastMinuteOfTrades = undefined;
 
     // select last minute of trades from database
-    Trade.find()
-      .where('date').gte(currentTime - timeBack)
+    Trade.find({'date':{ $gte: new Date(currentTime - timeBack) }})
+      // .where('date').gte(currentTime - timeBack)
       .sort({ date: 1 })
       .exec( function (err, docs) {
         if (!err && docs) {
@@ -28,14 +28,15 @@ module.exports = function(mongoose, Trade, MinuteBar) {
 
           // if we have trades, format minbar
           if (lastMinuteOfTrades.length > 0) {
-            var count = 0;
+            console.log("found " + lastMinuteOfTrades.length + " since " + newMinuteBar.date);
+            // var count = 0;
 
             newMinuteBar.open = lastMinuteOfTrades[0].price;
             newMinuteBar.close = lastMinuteOfTrades[lastMinuteOfTrades.length - 1 ].price;
+            newMinuteBar.volume = 0;
 
             // loop through trades to calculate low, high, and total volume
             lastMinuteOfTrades.forEach( function(trade) {
-              newMinuteBar.volume = 0;
               if (newMinuteBar.high === undefined || trade.price > newMinuteBar.high) {
                 newMinuteBar.high = trade.price;
               }
@@ -43,12 +44,13 @@ module.exports = function(mongoose, Trade, MinuteBar) {
                 newMinuteBar.low = trade.price;
               }
               newMinuteBar.volume += trade.amount;
-              count ++;
+              // count ++;
             });
           } else {
             // format minbar based on most recent trade
+            console.log("was not able to find any trades in last minute");
             Trade.find()
-              .sort({ date: 1 })
+              .sort({ 'date': -1 })
               .limit(1)
               .exec( function (err, docs) {
                 if (!err && docs) {

@@ -25,7 +25,7 @@ var app = express()
   , server = http.createServer(app)
   , io = require('socket.io').listen(server);
 
-server.listen(8080);
+server.listen(8000);
 
 // app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
@@ -71,7 +71,29 @@ var start_app = function () {
 
 
   app.get('/', routes.index());
-  app.get('/trades', trade_data( getHistoricalData() ));
+  // app.get('/trades', trade_data( getHistoricalData ));
+  app.get('/trades', function (req, res) {
+    MinuteBar.find().sort( {date: -1} ).limit(100).lean().exec(
+      function(err, docs) {
+        if (!err && docs) {
+          // console.log(docs);
+          res.set('Content-Type', 'text/javacript');
+
+          res.send("var trade_data = " + JSON.stringify(docs) + ";");
+          // return docs[0];
+        } else {
+          res.send("Tried to select last 30min of data but got nothing :(");
+          // return {};
+        }
+      }
+    );
+  });
+    // var history = getHistoricalData();
+    // console.log(history);
+    // res.set('Content-Type', 'text/javacript');
+
+    // res.send("var trade_data = " + JSON.stringify(history) + ";");
+  // });
 
   app.get('/test', function (req, res) {
     res.sendfile(__dirname + '/views/test.html');
