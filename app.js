@@ -11,7 +11,7 @@ var test = require('./routes/test').test;
 var trade_data = require('./routes/trades').trade_data; // a function
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/bitcoin');
+mongoose.connect('mongodb://cbtc.herokuapp.com/bitcoin');
 var db = mongoose.connection;
 var MinuteBar = require('./models/minute_bar')(mongoose);
 var Trade = require('./models/trades')(mongoose);
