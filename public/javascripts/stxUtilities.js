@@ -59,11 +59,11 @@ STX.colorToHex=function(color) {
     }
     var digits = /(.*?)rgb\((\d+), (\d+), (\d+)\)/.exec(color);
     if(!digits) digits=/(.*?)rgba\((\d+), (\d+), (\d+),.*\)/.exec(color);
-    
+
     var red = parseFloat(digits[2]);
     var green = parseFloat(digits[3]);
     var blue = parseFloat(digits[4]);
-   
+
     var rgb = blue | (green << 8) | (red << 16);
     var s=digits[1] + '#' + rgb.toString(16);
     return s.toUpperCase();
@@ -93,9 +93,9 @@ STX.hsv=function(color) {
 	 var computedV = 0;
 
 	 //remove spaces from input RGB values, convert to int
-	 var r = parseInt( (''+r).replace(/\s/g,''),10 ); 
-	 var g = parseInt( (''+g).replace(/\s/g,''),10 ); 
-	 var b = parseInt( (''+b).replace(/\s/g,''),10 ); 
+	 var r = parseInt( (''+r).replace(/\s/g,''),10 );
+	 var g = parseInt( (''+g).replace(/\s/g,''),10 );
+	 var b = parseInt( (''+b).replace(/\s/g,''),10 );
 
 	 if ( r==null || g==null || b==null ||
 	     isNaN(r) || isNaN(g)|| isNaN(b) ) {
@@ -189,8 +189,8 @@ function uniqueID(){
 function clearNode(node){
 	if ( node.hasChildNodes() ){
 		while ( node.childNodes.length >= 1 ){
-    		node.removeChild( node.firstChild );       
-		} 
+    		node.removeChild( node.firstChild );
+		}
 	}
 }
 
@@ -386,7 +386,7 @@ function strToDateTime(dt){
 			myDateArray[0]=myDateArray[1];
 			myDateArray[1]=myDateArray[2];
 		}
-		
+
 		if(lr.length>1){
 			var lr=lr[1].split(':');
 			return new Date(year,myDateArray[0]-1,myDateArray[1], lr[0], lr[1], 0, 0);
@@ -415,7 +415,7 @@ function strToDate(dt){
 		myDateArray[0]=myDateArray[1];
 		myDateArray[1]=myDateArray[2];
 	}
-	return new Date(year,myDateArray[0]-1,myDateArray[1]);	
+	return new Date(year,myDateArray[0]-1,myDateArray[1]);
 }
 
 function mmddyyyy(d){
@@ -636,7 +636,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 	  }
 	  if (fill) {
 	    ctx.fill();
-	  }        
+	  }
 }
 
 function semiRoundRect(ctx, x, y, width, height, radius, fill, stroke) {
@@ -660,7 +660,7 @@ function semiRoundRect(ctx, x, y, width, height, radius, fill, stroke) {
 	  }
 	  if (fill) {
 	    ctx.fill();
-	  }        
+	  }
 }
 function getLines(ctx,phrase,l) {
 	var wa=phrase.split(" "), phraseArray=[], lastPhrase="", measure=0;
@@ -768,7 +768,7 @@ STX.attachColorPicker = function(colorClick, cpHolder, cb){
 		if((x+cpHolder.colorPickerDiv.offsetWidth)>pageWidth())
 			x-=(x+cpHolder.colorPickerDiv.offsetWidth)-pageWidth()+20;
 		cpHolder.colorPickerDiv.style.left=x+"px";
-		
+
 		var y=(xy.y);
 		if(y+cpHolder.colorPickerDiv.clientHeight>pageHeight())
 			y-=(y+cpHolder.colorPickerDiv.clientHeight)-pageHeight();
@@ -803,7 +803,7 @@ STX.createColorPicker = function (div, fc) {
 }
 
 STX.isEmpty = function( o ) {
-    for ( var p in o ) { 
+    for ( var p in o ) {
         if ( o.hasOwnProperty( p ) ) { return false; }
     }
     return true;
@@ -811,7 +811,7 @@ STX.isEmpty = function( o ) {
 
 // Convenience function, returns the first property in an object, not guaranteed to work in all browsers
 STX.first = function( o ) {
-    for ( var p in o ) { 
+    for ( var p in o ) {
         return p;
     }
     return null;
@@ -819,7 +819,7 @@ STX.first = function( o ) {
 
 STX.last = function( o ) {
 	var l=null;
-    for ( var p in o ) { 
+    for ( var p in o ) {
         l=p;
     }
     return l;
@@ -828,7 +828,7 @@ STX.last = function( o ) {
 // Returns the number of properties in an object
 STX.objLength = function( o ) {
 	var i=0;
-    for ( var p in o ) { 
+    for ( var p in o ) {
         i++;
     }
     return i;
@@ -1228,7 +1228,7 @@ STX.clickTouch=function(div, fc){
 		div.ontouchend=fc;
 	}else{
 		if(STX.isAndroid){
-			div.onclick=closure(div, fc);			
+			div.onclick=closure(div, fc);
 		}else{
 			div.onclick=fc;
 		}

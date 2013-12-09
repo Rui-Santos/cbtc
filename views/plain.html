@@ -166,6 +166,7 @@
         // }
         // Inject the bar
         // console.log("hi");
+        // debugger;
         newTick.Date = yyyymmddhhmm(strToDateTime(newTick.Date));
         stx.appendMasterData([newTick]); // Add the new data point to the chart
 
@@ -177,7 +178,6 @@
 
     // tryig to load historical data
     var loadHistoricalData = function(trade_data) {
-
       if (trade_data) {
         for(var i = trade_data.length - 1; i >= 0; i--) {
           if (trade_data[i] && trade_data[i].date) {
@@ -197,6 +197,7 @@
       } else {
         console.log("trade data does not exist yet");
       }
+      stx.masterData.shift();
     };
 
     loadHistoricalData(trade_data);
