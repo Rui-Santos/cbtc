@@ -35,7 +35,7 @@ var getHistoricalData = require("./models/get_historical_data")(mongoose, Minute
 var app = express()
   , server = http.createServer(app)
   , io = require('socket.io').listen(server);
-var theport = pocess.env.PORT || 8000;
+var theport = process.env.PORT || 8000;
 server.listen(theport);
 
 // app.set('port', process.env.PORT || 3000);
