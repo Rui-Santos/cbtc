@@ -11,7 +11,18 @@ var test = require('./routes/test').test;
 var trade_data = require('./routes/trades').trade_data; // a function
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://cbtc.herokuapp.com/bitcoin');
+var uristring = process.env.MONGOLAB_URI ||
+                process.env.MONGOHQ_URL ||
+                'mongodb://localhost/bitcoin';
+
+mongoose.connect(uristring, function (err, res) {
+  if (err) {
+  console.log ('ERROR connecting to: ' + uristring + '. ' + err);
+  } else {
+  console.log ('Succeeded connected to: ' + uristring);
+  }
+});
+
 var db = mongoose.connection;
 var MinuteBar = require('./models/minute_bar')(mongoose);
 var Trade = require('./models/trades')(mongoose);
@@ -24,8 +35,8 @@ var getHistoricalData = require("./models/get_historical_data")(mongoose, Minute
 var app = express()
   , server = http.createServer(app)
   , io = require('socket.io').listen(server);
-
-server.listen(8000);
+var theport = pocess.env.PORT || 8000;
+server.listen(theport);
 
 // app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
