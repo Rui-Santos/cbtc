@@ -22,7 +22,7 @@ mongoose.connect(uristring, function (err, res) {
   console.log ('Succeeded connected to: ' + uristring);
   }
 });
-
+// commentssss
 var db = mongoose.connection;
 var MinuteBar = require('./models/minute_bar')(mongoose);
 var Trade = require('./models/trades')(mongoose);
