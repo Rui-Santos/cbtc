@@ -15,42 +15,7 @@ module.exports = function(mongoose, Trade) {
   //       , lag: false
   //     };
 
-  var initializeStream(url) = function(url) {
-    var wsStream = new Websocket(url);
 
-    wsStream.on('open', function() {
-      console.log('connected to:', url)
-      if (options.ticker) subscribe('ticker.BTC' + options.currency)
-      if (options.depth) subscribe('depth.BTC' + options.currency)
-      if (options.trade) subscribe('trade.BTC')
-      if (options.lag) subscribe('trade.lag')
-    });
-
-    wsStream.on('message', function(data) {
-      if (isValid(data)) { output(data) }
-    });
-
-    wsStream.on('close', function() {
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("MtGox stream disconnected");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-      console.log("----------------------------");
-
-      wsStream = initializeStream(url);
-    });
-    return wsStream;
-  };
 
   var MtGoxStream = function() {
     // console.log("creating new mtgox connection");
@@ -67,6 +32,43 @@ module.exports = function(mongoose, Trade) {
 
     var self = this;
     var ws = null;
+
+    var initializeStream(url) = function(url) {
+      var wsStream = new Websocket(url);
+
+      wsStream.on('open', function() {
+        console.log('connected to:', url)
+        if (options.ticker) subscribe('ticker.BTC' + options.currency)
+        if (options.depth) subscribe('depth.BTC' + options.currency)
+        if (options.trade) subscribe('trade.BTC')
+        if (options.lag) subscribe('trade.lag')
+      });
+
+      wsStream.on('message', function(data) {
+        if (isValid(data)) { output(data) }
+      });
+
+      wsStream.on('close', function() {
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("MtGox stream disconnected");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+        console.log("----------------------------");
+
+        wsStream = initializeStream(url);
+      });
+      return wsStream;
+    };
 
     this._read = function () {
       if (ws) {
