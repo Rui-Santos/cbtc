@@ -304,6 +304,9 @@
           ]
       };
       map.dataProvider = dataProvider;
+      map.removeLegend();
+      map.zoomControl.zoomControlEnabled = false;
+      map.zoomControl.panControlEnabled = false;
       // map.objectList = new AmCharts.ObjectList("listdiv");
       map.showImagesInList = false;
       map.write("mapdiv");

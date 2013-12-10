@@ -19,15 +19,15 @@ module.exports = function(mongoose, Trade, MinuteBar) {
       // .where('date').gte(currentTime - timeBack)
       .sort({ date: 1 })
       .exec( function (err, docs) {
-        if (!err && docs) {
+        if (!err) {
           lastMinuteOfTrades = docs;
           tradeArray.push(lastMinuteOfTrades);
 
           var newMinuteBar = new MinuteBar();
-              newMinuteBar.date = formatted_date;
+          newMinuteBar.date = formatted_date;
 
           // if we have trades, format minbar
-          if (lastMinuteOfTrades.length > 0) {
+          if (docs && lastMinuteOfTrades.length > 0) {
             console.log("found " + lastMinuteOfTrades.length + " since " + newMinuteBar.date);
             // var count = 0;
 
@@ -60,8 +60,10 @@ module.exports = function(mongoose, Trade, MinuteBar) {
                   newMinuteBar.high = lastTrade.price;
                   newMinuteBar.low = lastTrade.price;
                   newMinuteBar.volume = 0;
-                  newMinuteBar.open = lastTrade.proce;
+                  newMinuteBar.open = lastTrade.price;
                   newMinuteBar.close = lastTrade.price;
+                } else {
+                  console.log(err);
                 }
               });
             ;
@@ -78,6 +80,8 @@ module.exports = function(mongoose, Trade, MinuteBar) {
               io.sockets.emit('trades', minbar);
             }
           });
+        } else {
+          console.log(err);
         }
       });
     ;
