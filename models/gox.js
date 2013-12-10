@@ -33,7 +33,7 @@ module.exports = function(mongoose, Trade) {
     var self = this;
     var ws = null;
 
-    var initializeStream(url) = function(url) {
+    var initializeStream = function(url) {
       var wsStream = new Websocket(url);
 
       wsStream.on('open', function() {
