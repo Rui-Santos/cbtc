@@ -84,7 +84,7 @@ var start_app = function () {
   app.get('/', routes.index());
   // app.get('/trades', trade_data( getHistoricalData ));
   app.get('/trades', function (req, res) {
-    MinuteBar.find().sort( {date: -1} ).limit(100).lean().exec(
+    MinuteBar.find().sort( {date: -1} ).limit(200).lean().exec(
       function(err, docs) {
         if (!err && docs) {
           // console.log(docs);
