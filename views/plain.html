@@ -10,8 +10,8 @@
 <script type="text/javascript" src="javascripts/stxUtilities.js"></script>
 <script type="text/javascript" src="javascripts/stxMarket.js"></script>
 <script type="text/javascript" src="javascripts/stxStudies.js"></script>
-<!-- <script src="http://cbtc.herokuapp.com:80/socket.io/socket.io.js"></script> -->
-<script src="http://localhost:8000/socket.io/socket.io.js"></script>
+<script src="http://cbtc.herokuapp.com:80/socket.io/socket.io.js"></script>
+<!-- <script src="http://localhost:8000/socket.io/socket.io.js"></script> -->
 </head>
 
 <body>
@@ -203,7 +203,8 @@
 
     loadHistoricalData(trade_data);
 
-    var socket = io.connect('http://localhost:8000');
+    // var socket = io.connect('http://localhost:8000');
+    var socket = io.connect('http://cbtc.herokuapp.com:80');
 
     // var streamingData= [];
 
