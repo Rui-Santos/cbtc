@@ -120,15 +120,15 @@ db.on('error', console.error.bind(console, ' database connection error:'));
 
 db.once('open', function callback() {
   // start mtgox streaming
-  start_mtgox_stream();
+  // start_mtgox_stream();
   // start Blockchain transaction streaming
   Blockchain(io);
   // // create routes for dashboard
   start_app();
   // start sending up minute bars 1 minute after app starts
-  setTimeout(function() {
-    runMinuteBarCalc(io)
-  }, 60 * 1000);
+  // setTimeout(function() {
+  //   runMinuteBarCalc(io)
+  // }, 60 * 1000);
 });
 
 
