@@ -126,9 +126,9 @@ db.once('open', function callback() {
   // // create routes for dashboard
   start_app();
   // start sending up minute bars 1 minute after app starts
-  // setTimeout(function() {
-  //   runMinuteBarCalc(io)}, 61 * 1000);
-  // });
+  setTimeout(function() {
+    runMinuteBarCalc(io)}, 60 * 1000);
+  });
 });
 
 
