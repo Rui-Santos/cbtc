@@ -127,8 +127,8 @@ db.once('open', function callback() {
   start_app();
   // start sending up minute bars 1 minute after app starts
   setTimeout(function() {
-    runMinuteBarCalc(io)}, 60 * 1000);
-  });
+    runMinuteBarCalc(io)
+  }, 60 * 1000);
 });
 
 
