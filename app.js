@@ -67,7 +67,7 @@ var start_app = function () {
   app.get('/', routes.index());
   // app.get('/trades', trade_data( getHistoricalData ));
   app.get('/trades', function (req, res) {
-    MinuteBar.find().sort( {date: -1} ).limit(200).lean().exec(
+    MinuteBar.find().sort( {date: -1} ).limit(100).lean().exec(
       function(err, docs) {
         if (!err && docs) {
           // console.log(docs);
@@ -120,15 +120,15 @@ db.on('error', console.error.bind(console, ' database connection error:'));
 
 db.once('open', function callback() {
   // start mtgox streaming
-  // start_mtgox_stream();
+  start_mtgox_stream();
   // start Blockchain transaction streaming
   Blockchain(io);
   // // create routes for dashboard
   start_app();
   // start sending up minute bars 1 minute after app starts
-  // setTimeout(function() {
-  //   runMinuteBarCalc(io)
-  // }, 60 * 1000);
+  setTimeout(function() {
+    runMinuteBarCalc(io)
+  }, 60 * 1000);
 });
 
 

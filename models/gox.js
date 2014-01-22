@@ -65,7 +65,7 @@ module.exports = function(mongoose, Trade) {
         console.log("----------------------------");
         console.log("----------------------------");
 
-        wsStream = initializeStream(url);
+        // wsStream = initializeStream(url);
       });
       return wsStream;
     };
